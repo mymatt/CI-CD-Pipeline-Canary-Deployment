@@ -1,0 +1,4 @@
+#!/bin/bash
+exec /usr/local/bin/consul-template \
+    -consul-addr 127.0.0.1:8500 \
+    -config /etc/nginx/nginx.consul-template.hcl

@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    image: nginx-custom
+    container_name: proxy
+    restart: always
+    ports:
+      - '80:80'
+    environment:
+      - NGINX_SERVER_NAME=node1
+    network_mode: "host"
+    depends_on:
+      - web
+
+  consul:
+    build:
+      context: .
+      dockerfile: consulServer.Dockerfile
+    image: consul-custom
+    container_name: consul
+    restart: always
+    ports:
+      - '8500:8500'
+    environment:
+      - NODE_NAME=node1
+      - BIND_IP=192.168.33.10
+    network_mode: "host"
+
+  web:
+    build:
+      context: .
+      dockerfile: golang.Dockerfile
+    image: web
+    container_name: web
+    restart: always
+    ports:
+      - '8060:8060'
+    environment:
+      - NAME_WEB=web
+      - PORT=8060
+    network_mode: "host"
+
+  registrator:
+    image: gliderlabs/registrator:latest
+    container_name: registrator
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    command: -internal consul://localhost:8500
+    restart: always
+    depends_on:
+      - consul
+    network_mode: "host"

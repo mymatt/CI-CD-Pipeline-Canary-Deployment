@@ -1,0 +1,24 @@
+{
+
+  "datacenter": "Dev",
+  "data_dir": "/consul/data",
+  "log_level": "INFO",
+  "enable_script_checks": true,
+  "client_addr": "0.0.0.0",
+  "node_name": "${NODE_NAME}",
+  "bind_addr": "${CONSUL_IP}",
+  "server": false,
+  "retry_join": ["${CONSUL_IP}"],
+  "retry_interval": "10s",
+  "ui": true,
+  "service": {
+    "id": "${NODE_NAME}",
+    "name": "${NODE_NAME}",
+    "port": 80,
+    "check": {
+      "http": "http://localhost:80",
+      "interval": "10s"
+    }
+  }
+
+}

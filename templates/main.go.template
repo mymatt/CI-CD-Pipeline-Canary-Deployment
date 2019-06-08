@@ -1,0 +1,21 @@
+package main
+
+import (
+	"fmt"
+	"html/template"
+	"net/http"
+)
+
+func main() {
+
+	templates := template.Must(template.ParseFiles("/sites/go/files/templates/index.html"))
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if err := templates.ExecuteTemplate(w, "index.html", nil); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
+	fmt.Println(http.ListenAndServe(":${PORT}", nil))
+
+}
