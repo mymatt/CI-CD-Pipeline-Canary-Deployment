@@ -5,6 +5,7 @@ pipeline {
       registry = "mattmyers3491"
       registryCredential = 'dockerhub'
       image = 'jenkins-test'
+      image_test = 'jenkins-test/11'
     }
 
     agent none
