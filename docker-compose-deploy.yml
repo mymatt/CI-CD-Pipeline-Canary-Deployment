@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  web:
+    image: ${image_name}
+    container_name: web
+    restart: always
+    ports:
+      - '8060:8060'
+    environment:
+      - NAME_WEB=web
+      - PORT=8060
+    network_mode: "host"
