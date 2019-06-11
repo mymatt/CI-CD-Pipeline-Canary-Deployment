@@ -223,6 +223,7 @@ pipeline {
 
       post {
         always {
+          agent { label 'worker' }
           /* clean up our workspace */
           deleteDir()
           // is this needed?

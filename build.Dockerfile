@@ -1,4 +1,4 @@
-#gog
+#gogg
 FROM golang:latest
 
 RUN \
