@@ -96,6 +96,8 @@ pipeline {
 
 
                       sh 'echo "starting services"'
+                      image = 'jenkins-test'
+                      sh 'export image_test=${image}:${env.BUILD_NUMBER}'
                       sh "docker-compose -f ${docker_compose_test} up --force-recreate --abort-on-container-exit"
 
                       sh 'echo "running tests"'
