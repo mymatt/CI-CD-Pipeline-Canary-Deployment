@@ -122,8 +122,7 @@ pipeline {
 
                       script {
                         try {
-                          //https://registry.hub.docker.com
-                          docker.withRegistry('', registryCredential) {
+                          docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
                             customImage.push("${env.BUILD_NUMBER}")
                             customImage.push("latest")
                           }
