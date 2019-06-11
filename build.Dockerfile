@@ -1,6 +1,6 @@
-
+#golang
 FROM golang:latest
-#####
+
 RUN \
   apt-get update \
   && apt-get -y install gettext-base runit \
