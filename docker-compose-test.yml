@@ -2,10 +2,7 @@ version: '3'
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: golang.Dockerfile
-    image: web
+    image: ${image}:${env.BUILD_ID}
     container_name: web
     restart: always
     ports:

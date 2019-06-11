@@ -2,7 +2,7 @@ version: '3'
 
 services:
   web:
-    image: ${image_name}
+    image: ${image}:${env.BUILD_ID}
     container_name: web
     restart: always
     ports:
