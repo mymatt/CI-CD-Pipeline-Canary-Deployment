@@ -122,7 +122,8 @@ pipeline {
 
                       script {
                         try {
-                          docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
+                          // https://registry.hub.docker.com
+                          docker.withRegistry('https://cloud.docker.com/repository/docker/mattmyers3491/jenkins-docker', registryCredential) {
                             //customImage.push("${env.BUILD_NUMBER}")
                             customImage.push("latest")
                           }
