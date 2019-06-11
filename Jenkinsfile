@@ -168,28 +168,28 @@ pipeline {
             sh 'docker-compose -f ${docker_compose_deploy} up -d --build'
           }
         }
+      }
 
-        post {
-          always {
-            /* clean up our workspace */
-            deleteDir()
-            // is this needed?
-            // sh 'echo "Remove Unused docker image"'
-            // sh "docker rmi $registry:$BUILD_NUMBER"
-            // sh "docker-compose down --rmi all"
-          }
-          changed {
-            echo 'Things were different before...'
-          }
-          failure {
-            slackSend channel: 'app_updates', color: 'good', message: "Attention: ${env.JOB_NAME} #${env.BUILD_NUMBER} has failed."
-          }
-          success {
-            slackSend channel: 'app_updates', color: 'good', message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
-          }
-          unstable {
-            echo 'I am unstable :/'
-          }
+      post {
+        always {
+          /* clean up our workspace */
+          deleteDir()
+          // is this needed?
+          // sh 'echo "Remove Unused docker image"'
+          // sh "docker rmi $registry:$BUILD_NUMBER"
+          // sh "docker-compose down --rmi all"
+        }
+        changed {
+          echo 'Things were different before...'
+        }
+        failure {
+          slackSend channel: 'app_updates', color: 'good', message: "Attention: ${env.JOB_NAME} #${env.BUILD_NUMBER} has failed."
+        }
+        success {
+          slackSend channel: 'app_updates', color: 'good', message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+        }
+        unstable {
+          echo 'I am unstable :/'
         }
       }
 }
