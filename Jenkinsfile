@@ -98,7 +98,7 @@ pipeline {
 
                       sh 'echo "starting services"'
 
-                      sh "export ${image_test}=${image}:${env.BUILD_NUMBER}"
+                      sh "export image_test=${image}:${env.BUILD_NUMBER}"
                       sh "docker-compose -f ${docker_compose_test} up --force-recreate --abort-on-container-exit"
 
                       sh 'echo "running tests"'
