@@ -9,11 +9,11 @@ pipeline {
     agent none
 
     parameters {
-      string(name: 'gocode', defaultValue: '*.go'),
-      string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile'),
-      string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile'),
-      string(name: 'docker_compose_setup', defaultValue: 'docker-compose-setup.yml'),
-      string(name: 'docker_compose_deploy', defaultValue: 'docker-compose-deploy.yml'),
+      string(name: 'gocode', defaultValue: '*.go')
+      string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile')
+      string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile')
+      string(name: 'docker_compose_setup', defaultValue: 'docker-compose-setup.yml')
+      string(name: 'docker_compose_deploy', defaultValue: 'docker-compose-deploy.yml')
       string(name: 'DEPLOY_MODE', defaultValue: 'local')
     }
     stages {
