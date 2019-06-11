@@ -223,15 +223,18 @@ pipeline {
 
       post {
         always {
-          agent { label 'worker' }
-          /* clean up our workspace */
-          deleteDir()
-          // is this needed?
+          node('worker'){
+            sh 'echo "in post always section"'
+            /* clean up our workspace */
+            //deleteDir()
+            // is this needed?
 
-          //Delete all containers
-          sh 'docker rm $(docker ps -a -q)'
-          //Delete all images
-          sh 'docker rmi $(docker images -q)'
+            //Delete all containers
+            //sh 'docker rm $(docker ps -a -q)'
+            //Delete all images
+            //sh 'docker rmi $(docker images -q)'
+          }
+
         }
         changed {
           echo 'Things were different before...'
