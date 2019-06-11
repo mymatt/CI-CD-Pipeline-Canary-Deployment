@@ -4,13 +4,13 @@ pipeline {
     environment {
       registry = "mattmyers3491"
       registryCredential = 'dockerhub'
+      image = 'jenkins-test'
     }
 
     agent none
 
     parameters {
       string(name: 'gocode', defaultValue: '*.go')
-      string(name: 'image', defaultValue: 'jenkins-test')
       string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile')
       string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile')
       string(name: 'docker_compose_test', defaultValue: 'docker-compose-test.yml')
@@ -157,7 +157,7 @@ pipeline {
                       }
 
 
-                      sh 'docker push mattmyers3491/${image}:${env.BUILD_ID}'
+                      sh 'docker push ${registry}/${image}:${env.BUILD_ID}'
 
 
 
