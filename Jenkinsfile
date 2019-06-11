@@ -123,7 +123,7 @@ pipeline {
                       script {
                         try {
                           // https://registry.hub.docker.com
-                          docker.withRegistry('mattmyers3491/jenkins-docker', registryCredential) {
+                          docker.withRegistry('docker.io/mattmyers3491/jenkins-docker', registryCredential) {
                             //customImage.push("${env.BUILD_NUMBER}")
                             customImage.push("latest")
                           }
