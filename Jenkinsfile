@@ -126,7 +126,7 @@ pipeline {
                           //docker.withRegistry('https://cloud.docker.com/repository/docker/mattmyers3491/jenkins-docker', registryCredential) {
                             //customImage.push("${env.BUILD_NUMBER}")
                             customImage.push("latest")
-                          }
+                          // }
                         }
                         catch(e){
                           echo "Caught: ${e}"
