@@ -42,35 +42,36 @@ pipeline {
               stage('Unit Test') {
                   steps {
                       // Unit Testing here
-                      try {
-                        // echo 'Unit tests'
-                        // sh 'docker-compose -f test.yml up -d --build --remove-orphans'
-                        // sh 'sleep 5'
-                        // sh 'docker-compose -f test.yml exec -T fpm_test bash build/php_unit.sh'
+                      script {
+                        try {
+                          // echo 'Unit tests'
+                          // sh 'docker-compose -f test.yml up -d --build --remove-orphans'
+                          // sh 'sleep 5'
+                          // sh 'docker-compose -f test.yml exec -T fpm_test bash build/php_unit.sh'
 
-                        script {
-                          customImage.inside {
-                              sh 'echo "running tests"'
-                              // sh 'go fmt ${gocode}'/*Format code*/
-                              // sh 'go vet'/*reports suspicious constructs*/
-                              // sh 'goapp test'
-                              // sh 'go test -cover' /*check code coverage*/
-                              // sh 'go test -cover -coverprofile=c.out'/*html coverage report*/
-                              // sh 'go tool cover -html=c.out -o coverage.html'
-                          }
+
+                            customImage.inside {
+                                sh 'echo "running tests"'
+                                // sh 'go fmt ${gocode}'/*Format code*/
+                                // sh 'go vet'/*reports suspicious constructs*/
+                                // sh 'goapp test'
+                                // sh 'go test -cover' /*check code coverage*/
+                                // sh 'go test -cover -coverprofile=c.out'/*html coverage report*/
+                                // sh 'go tool cover -html=c.out -o coverage.html'
+                            }
+
+                          // Need to output coverage tests
+                          // to be processed by jenkins???
+                          // needs junit xml format
+
                         }
-
-                        // Need to output coverage tests
-                        // to be processed by jenkins???
-                        // needs junit xml format
-
-                      }
-                      catch(e){
-                        echo "Caught: ${e}"
-                        currentBuild.result = 'FAILURE'
-                        error "Unit Test failed"
-                      }finally{
-                        //????
+                        catch(e){
+                          echo "Caught: ${e}"
+                          currentBuild.result = 'FAILURE'
+                          error "Unit Test failed"
+                        }finally{
+                          //????
+                        }
                       }
                   }
               }
@@ -79,15 +80,17 @@ pipeline {
                 // infrastructure test performed on specific testing node (docker node)
                 // node needs to be setup to support infrastructure tests
                 steps {
-                  try {
+                  script {
+                    try {
 
-                  }
-                  catch(e){
-                    echo "Caught: ${e}"
-                    currentBuild.result = 'FAILURE'
-                    error "Integration Test failed"
-                  }finally{
-                    //?????
+                    }
+                    catch(e){
+                      echo "Caught: ${e}"
+                      currentBuild.result = 'FAILURE'
+                      error "Integration Test failed"
+                    }finally{
+                      //?????
+                    }
                   }
                 }
               }
