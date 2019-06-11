@@ -34,7 +34,18 @@ pipeline {
                       // dockerfile should be scaled down just for tests
                       //=> build.Dockerfile
                       script {
-                        customImage = docker.build(registry,"-f ${dockerfile_Build} ./test" )
+                        try {
+                          customImage = docker.build(registry,"-f ${dockerfile_Build} ./test" )
+                        }
+                        catch(e){
+                          echo "Caught: ${e}"
+                          currentBuild.result = 'FAILURE'
+                          error "Build stage failed"
+                        }
+                        finally{
+
+                        }
+
                       }
                   }
               }
