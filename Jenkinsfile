@@ -2,7 +2,7 @@
 pipeline {
 
     environment {
-      registry = "mattmyers3491/jenkins-docker"
+      registry = "mattmyers3491/jenkins-test"
       registryCredential = 'dockerhub'
     }
 
@@ -35,7 +35,7 @@ pipeline {
                       //=> build.Dockerfile
                       script {
                         try {
-                          customImage = docker.build("jenkins-docker:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
+                          customImage = docker.build("jenkins-test:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
                         }
                         catch(e){
                           echo "Caught: ${e}"
@@ -124,8 +124,8 @@ pipeline {
                         try {
                           // https://registry.hub.docker.com
                           docker.withRegistry('https://docker.io/mattmyers3491', registryCredential) {
-                            //customImage.push("${env.BUILD_NUMBER}")
-                            customImage.push("latest")
+                            customImage.push("${env.BUILD_NUMBER}")
+                            //customImage.push("latest")
                           }
                         }
                         catch(e){
