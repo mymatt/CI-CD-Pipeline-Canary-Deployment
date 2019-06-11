@@ -2,7 +2,7 @@ version: '3'
 
 services:
   web:
-    image: ${image_test}
+    image: jenkins-test:${env.BUILD_ID}
     container_name: web
     restart: always
     ports:
