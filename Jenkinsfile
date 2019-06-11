@@ -35,7 +35,7 @@ pipeline {
                       //=> build.Dockerfile
                       script {
                         try {
-                          customImage = docker.build("go_image:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
+                          customImage = docker.build("jenkins-docker:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
                         }
                         catch(e){
                           echo "Caught: ${e}"
@@ -123,7 +123,7 @@ pipeline {
                       script {
                         try {
                           // https://registry.hub.docker.com
-                          docker.withRegistry('https://docker.io', registryCredential) {
+                          docker.withRegistry('https://docker.io/mattmyers3491', registryCredential) {
                             //customImage.push("${env.BUILD_NUMBER}")
                             customImage.push("latest")
                           }
