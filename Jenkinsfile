@@ -35,7 +35,7 @@ pipeline {
                       //=> build.Dockerfile
                       script {
                         try {
-                          customImage = docker.build(registry,"-f ${dockerfile_Build} ./test" )
+                          customImage = docker.build("go_image:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
                         }
                         catch(e){
                           echo "Caught: ${e}"
