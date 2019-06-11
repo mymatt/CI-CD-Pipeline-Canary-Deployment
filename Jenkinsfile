@@ -118,10 +118,22 @@ pipeline {
                   steps {
                       echo 'push docker image'
 
+
+
                       script {
-                        docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
-                          customImage.push("${env.BUILD_NUMBER}")
-                          customImage.push("latest")
+                        try {
+                          //https://registry.hub.docker.com
+                          docker.withRegistry('', registryCredential) {
+                            customImage.push("${env.BUILD_NUMBER}")
+                            customImage.push("latest")
+                          }
+                        }
+                        catch(e){
+                          echo "Caught: ${e}"
+                          currentBuild.result = 'FAILURE'
+                          error "Publish failed"
+                        }finally{
+                          //?????
                         }
                       }
 
