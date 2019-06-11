@@ -1,4 +1,4 @@
-#go
+#g
 FROM golang:latest
 
 RUN \
