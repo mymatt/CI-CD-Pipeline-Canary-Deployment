@@ -5,7 +5,7 @@ pipeline {
       registry = "mattmyers3491"
       registryCredential = 'dockerhub'
       image = 'jenkins-test'
-      image_test = 'jenkins-test/11'
+      image_test = 'jenkins-test/${env.BUILD_ID}'
     }
 
     agent none
