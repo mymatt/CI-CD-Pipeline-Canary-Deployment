@@ -153,6 +153,7 @@ pipeline {
             beforeAgent true
           }
           steps {
+              sh "Deploy local entered"
               //docker compose to simulate existing infrastructure
               sh 'docker-compose -f ${docker_compose_setup} up -d --build'
               // change nginx conf to allow blue green deployment
@@ -163,9 +164,9 @@ pipeline {
               //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
               //docker compose to deploy new version
               sh 'docker-compose -f ${docker_compose_deploy} up -d --build'
-              script {
-                currentBuild.result = 'SUCCESS'
-              }
+              // script {
+              //   currentBuild.result = 'SUCCESS'
+              // }
 
           }
         }
@@ -179,6 +180,7 @@ pipeline {
             beforeAgent true
           }
           steps {
+            sh "Deploy production entered"
             // change nginx conf to allow blue green deployment
             // docker compose up
             // publish to a docker swarm set of nodes
@@ -188,9 +190,9 @@ pipeline {
             //docker compose to deploy new version
             sh 'docker-compose -f ${docker_compose_deploy} up -d --build'
 
-            script {
-              currentBuild.result = 'SUCCESS'
-            }
+            // script {
+            //   currentBuild.result = 'SUCCESS'
+            // }
           }
         }
       }
