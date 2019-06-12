@@ -136,7 +136,7 @@ pipeline {
 
               stage('Publish') {
                   steps {
-                      echo 'push docker image'
+                      sh 'echo push docker image'
 
 
 
@@ -196,8 +196,10 @@ pipeline {
               //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
               //docker compose to deploy new version
               sh 'docker-compose -f ${docker_compose_deploy} up -d --build'
+              script {
+                currentBuild.result = 'SUCCESS'
+              }
 
-              currentBuild.result = 'SUCCESS'
           }
         }
 
@@ -219,7 +221,9 @@ pipeline {
             //docker compose to deploy new version
             sh 'docker-compose -f ${docker_compose_deploy} up -d --build'
 
-            currentBuild.result = 'SUCCESS'
+            script {
+              currentBuild.result = 'SUCCESS'
+            }
           }
         }
       }
@@ -233,6 +237,8 @@ pipeline {
               //deleteDir()
 
               //Delete all containers
+              sh 'docker stop $(docker ps -q)'
+              sh 'docker system prune -f'
               sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
             }
 
