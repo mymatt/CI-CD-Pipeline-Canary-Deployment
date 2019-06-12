@@ -204,7 +204,7 @@ pipeline {
               //deleteDir()
 
               //Cleanup Docker
-              sh 'docker system prune -a -f'
+              //sh 'docker system prune -a -f'
               sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
             //}
 
