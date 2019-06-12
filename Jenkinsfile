@@ -145,15 +145,17 @@ pipeline {
           }
 
         stage('Deploy Local'){
+          sh "Deploy local entered"
           //change to { label local }
           agent { label 'worker' }
           when {
             equals expected: local,
             actual: DEPLOY_MODE
             beforeAgent true
+            sh "Deploy local entered WHHEEENN"
           }
           steps {
-              sh "Deploy local entered"
+              sh "Deploy local entered BBBBBBB"
               //docker compose to simulate existing infrastructure
               sh 'docker-compose -f ${docker_compose_setup} up -d --build'
               // change nginx conf to allow blue green deployment
