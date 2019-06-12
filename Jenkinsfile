@@ -36,20 +36,20 @@ pipeline {
 
                       // dockerfile should be scaled down just for tests
                       //=> build.Dockerfile
-                      // script {
-                      //   try {
-                      //     customImage = docker.build("jenkins-test:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
-                      //   }
-                      //   catch(e){
-                      //     echo "Caught: ${e}"
-                      //     currentBuild.result = 'FAILURE'
-                      //     error "Build stage failed"
-                      //   }
-                      //   finally{
-                      //   }
-                      // }
-                      sh "docker build -t ${image}:${env.BUILD_ID} -f ${dockerfile_Build} ."
-                      sh "docker image ls"
+                      script {
+                        try {
+                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
+                        }
+                        catch(e){
+                          echo "Caught: ${e}"
+                          currentBuild.result = 'FAILURE'
+                          error "Build stage failed"
+                        }
+                        finally{
+                        }
+                      }
+                      // sh "docker build -t ${registry}/${image}:${env.BUILD_ID} -f ${dockerfile_Build} ."
+                      // sh "docker image ls"
 
 
 
@@ -96,10 +96,10 @@ pipeline {
 
 
 
-                      sh 'echo "starting services"'
-                      sh "docker-compose -f ${docker_compose_test} up --force-recreate --abort-on-container-exit"
-
-                      sh 'echo "running tests"'
+                      // sh 'echo "starting services"'
+                      // sh "docker-compose -f ${docker_compose_test} up --force-recreate --abort-on-container-exit"
+                      //
+                      // sh 'echo "running tests"'
                       //sh 'docker-compose -f ${docker_compose_test} exec -T web bash scripts/tests.sh'
 
 
@@ -143,9 +143,10 @@ pipeline {
                       script {
                         try {
                           // https://registry.hub.docker.com
-                          docker.withRegistry('https://docker.io/mattmyers3491', registryCredential) {
-                            customImage.push("${env.BUILD_NUMBER}")
-                            //customImage.push("latest")
+                          docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
+
+                            // customImage.push("${env.BUILD_NUMBER}")
+                            customImage.push("latest")
                           }
                         }
                         catch(e){
@@ -157,8 +158,8 @@ pipeline {
                         }
                       }
 
-
-                      sh 'docker push ${registry}/${image}:${env.BUILD_ID}'
+                      // sh 'docker login -u -p'
+                      // sh 'docker push ${registry}/${image}:${env.BUILD_ID}'
 
 
 
@@ -228,7 +229,7 @@ pipeline {
             /* clean up our workspace */
             //deleteDir()
             // is this needed?
-
+            sh 'docker image rm ${registry}/${image}:${env.BUILD_ID}'
             //Delete all containers
             //sh 'docker rm $(docker ps -a -q)'
             //Delete all images
