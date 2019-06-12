@@ -5,7 +5,7 @@ pipeline {
       registry = "mattmyers3491"
       registryCredential = "dockerhub"
       image = "jenkins-test"
-      image_test = "${registry}/${image}:${env.BUILD_ID}"
+      curr_image = "${registry}/${image}:${env.BUILD_ID}"
     }
 
     agent none
@@ -142,10 +142,8 @@ pipeline {
 
                       script {
                         try {
-                          // https://registry.hub.docker.com
                           docker.withRegistry('', registryCredential) {
-
-                            // customImage.push("${env.BUILD_NUMBER}")
+                            customImage.push("${env.BUILD_NUMBER}")
                             customImage.push("latest")
                           }
                         }
@@ -229,7 +227,7 @@ pipeline {
             /* clean up our workspace */
             //deleteDir()
             // is this needed?
-            sh 'docker image rm ${registry}/${image}:${env.BUILD_ID}'
+            sh 'docker rmi $(docker images | grep jenkins-test) -f'
             //Delete all containers
             //sh 'docker rm $(docker ps -a -q)'
             //Delete all images
