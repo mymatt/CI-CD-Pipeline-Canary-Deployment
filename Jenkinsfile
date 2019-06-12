@@ -237,7 +237,6 @@ pipeline {
               //deleteDir()
 
               //Delete all containers
-              sh 'docker stop $(docker ps -q)'
               sh 'docker system prune -f'
               sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
             //}
