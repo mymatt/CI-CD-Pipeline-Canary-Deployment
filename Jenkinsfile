@@ -196,6 +196,8 @@ pipeline {
               //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
               //docker compose to deploy new version
               sh 'docker-compose -f ${docker_compose_deploy} up -d --build'
+
+              currentBuild.result = 'SUCCESS'
           }
         }
 
@@ -216,6 +218,8 @@ pipeline {
             //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
             //docker compose to deploy new version
             sh 'docker-compose -f ${docker_compose_deploy} up -d --build'
+
+            currentBuild.result = 'SUCCESS'
           }
         }
       }
@@ -223,15 +227,15 @@ pipeline {
       post {
         always {
           node('worker'){
-            sh 'echo "in post always section"'
-            /* clean up our workspace */
-            //deleteDir()
-            // is this needed?
-            sh 'docker rmi $(docker images | grep jenkins-test) -f'
-            //Delete all containers
-            //sh 'docker rm $(docker ps -a -q)'
-            //Delete all images
-            //sh 'docker rmi $(docker images -q)'
+            step {
+              sh 'echo "in post always section"'
+              /* clean up our workspace */
+              //deleteDir()
+
+              //Delete all containers
+              sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
+            }
+
           }
 
         }
