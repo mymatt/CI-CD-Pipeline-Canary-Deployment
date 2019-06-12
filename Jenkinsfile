@@ -48,12 +48,6 @@ pipeline {
                         finally{
                         }
                       }
-                      // sh "docker build -t ${registry}/${image}:${env.BUILD_ID} -f ${dockerfile_Build} ."
-                      // sh "docker image ls"
-
-
-
-
                   }
               }
 
@@ -62,11 +56,10 @@ pipeline {
                       // Unit Testing here
                       script {
                         try {
-                          // echo 'Unit tests'
+                          sh 'echo Unit tests'
                           // sh 'docker-compose -f test.yml up -d --build --remove-orphans'
                           // sh 'sleep 5'
                           // sh 'docker-compose -f test.yml exec -T fpm_test bash build/php_unit.sh'
-
 
                             customImage.inside {
                                 sh 'echo "running tests"'
@@ -77,11 +70,9 @@ pipeline {
                                 // sh 'go test -cover -coverprofile=c.out'/*html coverage report*/
                                 // sh 'go tool cover -html=c.out -o coverage.html'
                             }
-
                           // Need to output coverage tests
                           // to be processed by jenkins???
                           // needs junit xml format
-
                         }
                         catch(e){
                           echo "Caught: ${e}"
@@ -91,19 +82,6 @@ pipeline {
                           //????
                         }
                       }
-
-
-
-
-
-                      // sh 'echo "starting services"'
-                      // sh "docker-compose -f ${docker_compose_test} up --force-recreate --abort-on-container-exit"
-                      //
-                      // sh 'echo "running tests"'
-                      //sh 'docker-compose -f ${docker_compose_test} exec -T web bash scripts/tests.sh'
-
-
-
                   }
               }
 
@@ -130,16 +108,12 @@ pipeline {
                   steps {
                     // SonarQube
                     sh 'echo "performing Quality Analysis"'
-
                   }
               }
 
               stage('Publish') {
                   steps {
                       sh 'echo push docker image'
-
-
-
                       script {
                         try {
                           docker.withRegistry('', registryCredential) {
@@ -155,13 +129,6 @@ pipeline {
                           //?????
                         }
                       }
-
-                      // sh 'docker login -u -p'
-                      // sh 'docker push ${registry}/${image}:${env.BUILD_ID}'
-
-
-
-
                   }
               }
 
@@ -232,13 +199,13 @@ pipeline {
         always {
           node('worker'){
             //step {
-              sh 'echo "in post always section"'
+              sh 'echo "post => always section"'
               /* clean up our workspace */
               //deleteDir()
 
-              //Delete all containers
-              sh 'docker system prune -f'
-              sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
+              //Cleanup Docker
+              sh 'docker system prune -a -f'
+              //sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
             //}
 
           }
