@@ -231,7 +231,7 @@ pipeline {
       post {
         always {
           node('worker'){
-            step {
+            //step {
               sh 'echo "in post always section"'
               /* clean up our workspace */
               //deleteDir()
@@ -240,7 +240,7 @@ pipeline {
               sh 'docker stop $(docker ps -q)'
               sh 'docker system prune -f'
               sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
-            }
+            //}
 
           }
 
