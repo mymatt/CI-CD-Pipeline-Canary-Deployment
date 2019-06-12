@@ -27,7 +27,7 @@ services:
       - '8500:8500'
     environment:
       - NODE_NAME=node1
-      - BIND_IP=192.168.33.10
+      - BIND_IP=192.168.60.10
     network_mode: "host"
 
   web:
