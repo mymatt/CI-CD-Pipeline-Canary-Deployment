@@ -145,14 +145,12 @@ pipeline {
           }
 
         stage('Deploy Local'){
-          sh "Deploy local entered"
           //change to { label local }
           agent { label 'worker' }
           when {
-            equals expected: local,
+            equals expected: 'local',
             actual: DEPLOY_MODE
             beforeAgent true
-            sh "Deploy local entered WHHEEENN"
           }
           steps {
               sh "Deploy local entered BBBBBBB"
@@ -177,7 +175,7 @@ pipeline {
           //change to { label production }
           agent { label 'worker' }
           when {
-            equals expected: production,
+            equals expected: 'production',
             actual: DEPLOY_MODE
             beforeAgent true
           }
