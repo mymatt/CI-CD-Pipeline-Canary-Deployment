@@ -56,13 +56,13 @@ pipeline {
                       // Unit Testing here
                       script {
                         try {
-                          sh 'echo Unit tests'
+                          echo 'Unit tests'
                           // sh 'docker-compose -f test.yml up -d --build --remove-orphans'
                           // sh 'sleep 5'
                           // sh 'docker-compose -f test.yml exec -T fpm_test bash build/php_unit.sh'
 
                             customImage.inside {
-                                sh 'echo "running tests"'
+                                echo 'running tests'
                                 // sh 'go fmt ${gocode}'/*Format code*/
                                 // sh 'go vet'/*reports suspicious constructs*/
                                 // sh 'goapp test'
@@ -107,13 +107,13 @@ pipeline {
               stage ('Quality Analysis') {
                   steps {
                     // SonarQube
-                    sh 'echo "performing Quality Analysis"'
+                    echo 'performing Quality Analysis'
                   }
               }
 
               stage('Publish') {
                   steps {
-                      sh 'echo push docker image'
+                      echo 'push docker image'
                       script {
                         try {
                           docker.withRegistry('', registryCredential) {
@@ -154,7 +154,7 @@ pipeline {
           }
           steps {
               sh "Deploy local entered BBBBBBB"
-              sh "echo ${docker_compose_setup}"
+              echo "${docker_compose_setup}"
               //docker compose to simulate existing infrastructure
               sh "docker-compose -f ${docker_compose_setup} up -d --build"
               // change nginx conf to allow blue green deployment
@@ -202,7 +202,7 @@ pipeline {
         always {
           node('worker'){
             //step {
-              sh 'echo "post => always section"'
+              echo 'post => always section'
               /* clean up our workspace */
               //deleteDir()
 
