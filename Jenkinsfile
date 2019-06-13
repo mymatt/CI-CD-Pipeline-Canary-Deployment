@@ -207,7 +207,7 @@ pipeline {
 
               //Cleanup Docker
               //sh 'docker system prune -a -f'
-              sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
+              //sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
             //}
 
           }
