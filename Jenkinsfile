@@ -153,7 +153,8 @@ pipeline {
             beforeAgent true
           }
           steps {
-              sh "Deploy local entered BBBBBBB"
+              echo 'Deploy local entered BBBBBBB'
+              echo "${docker_compose_setup}"
               echo "${params.docker_compose_setup}"
               //docker compose to simulate existing infrastructure
               sh "docker-compose -f ${params.docker_compose_setup} up -d --build"
