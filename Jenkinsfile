@@ -154,9 +154,9 @@ pipeline {
           }
           steps {
               sh "Deploy local entered BBBBBBB"
-              echo "${docker_compose_setup}"
+              echo "${params.docker_compose_setup}"
               //docker compose to simulate existing infrastructure
-              sh "docker-compose -f ${docker_compose_setup} up -d --build"
+              sh "docker-compose -f ${params.docker_compose_setup} up -d --build"
               // change nginx conf to allow blue green deployment
               // docker compose up
               // publish to a docker swarm set of nodes
@@ -164,7 +164,7 @@ pipeline {
 
               //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
               //docker compose to deploy new version
-              sh "docker-compose -f ${docker_compose_deploy} up -d --build"
+              sh "docker-compose -f ${params.docker_compose_deploy} up -d --build"
               // script {
               //   currentBuild.result = 'SUCCESS'
               // }
