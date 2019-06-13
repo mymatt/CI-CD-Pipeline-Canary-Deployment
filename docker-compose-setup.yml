@@ -13,8 +13,6 @@ services:
     environment:
       - NGINX_SERVER_NAME=node1
     network_mode: "host"
-    depends_on:
-      - web
 
   consul:
     build:

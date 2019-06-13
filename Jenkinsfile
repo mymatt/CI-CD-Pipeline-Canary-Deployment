@@ -153,11 +153,9 @@ pipeline {
             beforeAgent true
           }
           steps {
-              echo 'Deploy local entered BBBBBBB'
-              echo "${docker_compose_setup}"
-              echo "${params.docker_compose_setup}"
+              echo 'Deploy local'
               //docker compose to simulate existing infrastructure
-              sh "docker-compose -f ${params.docker_compose_setup} up -d --build"
+              sh "docker-compose -f ${docker_compose_setup} up -d --build"
               // change nginx conf to allow blue green deployment
               // docker compose up
               // publish to a docker swarm set of nodes
@@ -165,7 +163,7 @@ pipeline {
 
               //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
               //docker compose to deploy new version
-              sh "docker-compose -f ${params.docker_compose_deploy} up -d --build"
+              sh "docker-compose -f ${docker_compose_deploy} up -d --build"
               // script {
               //   currentBuild.result = 'SUCCESS'
               // }
@@ -209,7 +207,7 @@ pipeline {
 
               //Cleanup Docker
               //sh 'docker system prune -a -f'
-              //sh 'docker rmi $(docker images | sed -e '1d;s/ .*//' | grep jenkins-test) -f || true'
+              //sh 'docker rmi $(docker images --filter=reference="mattmyers3491/jenkins-test:*" -q) -f || true'
             //}
 
           }
