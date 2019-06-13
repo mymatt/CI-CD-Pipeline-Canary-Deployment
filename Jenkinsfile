@@ -154,6 +154,7 @@ pipeline {
           }
           steps {
               sh "Deploy local entered BBBBBBB"
+              sh "echo ${docker_compose_setup}"
               //docker compose to simulate existing infrastructure
               sh "docker-compose -f ${docker_compose_setup} up -d --build"
               // change nginx conf to allow blue green deployment
@@ -207,7 +208,7 @@ pipeline {
 
               //Cleanup Docker
               //sh 'docker system prune -a -f'
-              //sh 'docker rmi $(docker images | grep jenkins-test) -f || true'
+              //sh 'docker rmi $(docker images | sed -e '1d;s/ .*//' | grep jenkins-test) -f || true'
             //}
 
           }
