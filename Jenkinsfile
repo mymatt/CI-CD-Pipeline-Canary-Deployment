@@ -106,7 +106,7 @@ pipeline {
                           error "Build stage failed"
                         }
                         finally{
-                          error "exit "
+
                         }
                       }
                   }
@@ -187,7 +187,7 @@ pipeline {
                           currentBuild.result = 'FAILURE'
                           error "Publish failed"
                         }finally{
-                          //?????
+                          error "exit "
                         }
                       }
                   }
