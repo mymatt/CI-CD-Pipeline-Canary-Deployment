@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  proxy:
+    ports:
+      - '80:80'
+    environment:
+      - NGINX_SERVER_NAME=node1
+
+  consul:
+    ports:
+      - '8500:8500'
+    environment:
+      - NODE_NAME=node1
+      - BIND_IP=192.168.33.10
+
+  blue:
+    image: mattmyers3491/jenkins-test:latest
+    ports:
+      - '8060:8060'
+
+  green:
+    image: mattmyers3491/jenkins-test:latest
+    ports:
+      - '8070:8070'

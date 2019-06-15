@@ -1,240 +1,238 @@
-#!groovy​
 
 pipeline {
-    def customImage
 
     environment {
-      registry = "mattmyers3491/jenkins-docker"
-      registryCredential = 'dockerhub'
+      registry = "mattmyers3491"
+      registryCredential = "dockerhub"
+      image = "jenkins-test"
+      curr_image = "${registry}/${image}:${env.BUILD_ID}"
     }
 
-    //What need to be in place for VERSIONING
-    //artifacts
-    //need to integrate test output with jenkins
-
-
-
-
-    dir('~/Downloads') {
-      some block
-    }
-    if (params.BOOLEAN_PARAM_NAME) {
-      doSomething()
-    }
-
-    writeFile file: '~/Documents', text: 'this is test text'
-
-    // good, warning, danger
-    slackSend channel: 'app_updates', color: 'good', message: 'this is a test message'
-
-    currentBuild.number
-    //SUCCESS, UNSTABLE, FAILURE
-    currentBuild.result
-    currentBuild.currentResult
-
-
-    agent {
-      label 'docker_run'
-      dockerfile {
-        filename 'Dockerfile.build'
-        dir 'build'
-        label 'my-defined-label'
-        registryUrl 'https://myregistry.com/'
-        registryCredentialsId 'myPredefinedCredentialsInJenkins'
-      }
-    }
-
-    options {
-        timeout(time: 1, unit: 'HOURS')
-    }
-
-
-    OR
-
-    stage('Example') {
-            options {
-                timeout(time: 1, unit: 'HOURS')
-            }
-            steps {
-                echo 'Hello World'
-            }
-        }
-
-    stage('Input Example') {
-            input {
-                message "Should we continue?"
-                ok "Yes, we should."
-                submitter "alice,bob"
-                parameters {
-                    string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
-                }
-            }
-            steps {
-                echo "Hello, ${PERSON}, nice to meet you."
-            }
-        }
-
-
-
-
-    stage('Example') {
-        if (env.BRANCH_NAME == 'master') {
-            echo 'I only execute on the master branch'
-        } else {
-            echo 'I execute elsewhere'
-        }
-    }
-
-
-
-
-
-    stage('Try Catch Example') {
-        try {
-            sh 'exit 1'
-        }
-        catch (exc) {
-            echo 'Something failed, I should sound the klaxons!'
-            throw
-        }
-    }
-
-
-
-
-
-    //multiple agents
-     agent { label 'docker_run1||docker_run2' }
-
-
-
-
-    //run on docker agent
-    agent { label 'worker' }
+    agent none
 
     parameters {
-      string(name: 'gocode', defaultValue: '*.go'),
-      string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile'),
-      string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile'),
-      string(name: 'docker_compose', defaultValue: 'docker-compose.yml')
+      string(name: 'gocode', defaultValue: '*.go')
+      string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile')
+      string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile')
+      string(name: 'docker_compose_test', defaultValue: 'docker-compose-test.yml')
+      string(name: 'docker_compose_setup', defaultValue: 'docker-compose-setup.yml')
+      string(name: 'docker_compose_deploy', defaultValue: 'docker-compose-deploy.yml')
+      string(name: 'DEPLOY_MODE', defaultValue: 'local')
     }
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        stage('Build') {
-            steps {
-                // setup container for testing
 
-                // dockerfile should be scaled down just for tests
-                //=> build.Dockerfile
+        stage('Build and Test') {
+          agent { label 'worker' }
+          stages {
+              stage('Checkout') {
+                  steps {
+                      checkout scm
+                  }
+              }
 
-                customImage = docker.build(registry,"-f ${dockerfile_Build} ./test" )
+              stage('Build') {
+                  steps {
+                      // setup container for testing
 
-                slackSend channel: 'app_updates', color: 'good', message: 'Build Stage Complete'
+                      // dockerfile should be scaled down just for tests
+                      //=> build.Dockerfile
+                      script {
+                        try {
+                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
+                        }
+                        catch(e){
+                          echo "Caught: ${e}"
+                          currentBuild.result = 'FAILURE'
+                          error "Build stage failed"
+                        }
+                        finally{
+                        }
+                      }
+                  }
+              }
 
-            }
-        }
-        stage('Unit Test') {
-            steps {
-                // Unit Testing here
-                echo 'PHP Unit tests'
-                sh 'docker-compose -f test.yml up -d --build --remove-orphans'
-                sh 'sleep 5'
-                sh 'docker-compose -f test.yml exec -T fpm_test bash build/php_unit.sh'
+              stage('Unit Test') {
+                  steps {
+                      // Unit Testing here
+                      script {
+                        try {
+                          echo 'Unit tests'
+                          // sh 'docker-compose -f test.yml up -d --build --remove-orphans'
+                          // sh 'sleep 5'
+                          // sh 'docker-compose -f test.yml exec -T fpm_test bash build/php_unit.sh'
 
-                // how to use Go coverage tests and integrate results with jenkins
+                            customImage.inside {
+                                echo 'running tests'
+                                // sh 'go fmt ${gocode}'/*Format code*/
+                                // sh 'go vet'/*reports suspicious constructs*/
+                                // sh 'goapp test'
+                                // sh 'go test -cover' /*check code coverage*/
+                                // sh 'go test -cover -coverprofile=c.out'/*html coverage report*/
+                                // sh 'go tool cover -html=c.out -o coverage.html'
+                            }
+                          // Need to output coverage tests
+                          // to be processed by jenkins???
+                          // needs junit xml format
+                        }
+                        catch(e){
+                          echo "Caught: ${e}"
+                          currentBuild.result = 'FAILURE'
+                          error "Unit Test failed"
+                        }finally{
+                          //????
+                        }
+                      }
+                  }
+              }
 
-                customImage.inside {
-                    // Format code
-                    sh 'go fmt ${gocode}'
-                    // examine code and reports suspicious constructs
-                    sh 'go vet'
-                    sh 'goapp test'
-                    // check code coverage
-                    sh 'go test -cover'
-                    // html coverage report
-                    sh 'go test -cover -coverprofile=c.out'
-                    sh 'go tool cover -html=c.out -o coverage.html'
+              stage ('Integration Test') {
+                // infrastructure test performed on specific testing node (docker node)
+                // node needs to be setup to support infrastructure tests
+                steps {
+                  script {
+                    try {
+
+                    }
+                    catch(e){
+                      echo "Caught: ${e}"
+                      currentBuild.result = 'FAILURE'
+                      error "Integration Test failed"
+                    }finally{
+                      //?????
+                    }
+                  }
                 }
+              }
 
-                slackSend channel: 'app_updates', color: 'good', message: 'Unit Test Stage Complete'
+              stage ('Quality Analysis') {
+                  steps {
+                    // SonarQube
+                    echo 'performing Quality Analysis'
+                  }
+              }
 
+              stage('Publish') {
+                  steps {
+                      echo 'push docker image'
+                      script {
+                        try {
+                          docker.withRegistry('', registryCredential) {
+                            customImage.push("${env.BUILD_NUMBER}")
+                            customImage.push("latest")
+                          }
+                        }
+                        catch(e){
+                          echo "Caught: ${e}"
+                          currentBuild.result = 'FAILURE'
+                          error "Publish failed"
+                        }finally{
+                          //?????
+                        }
+                      }
+                  }
+              }
 
-            }
-        }
-        stage ('Integration Test') {
-          // infrastructure testing (see red hat blog)
-          // infrastructure test performed on specific testing node (docker node)
-          // node needs to be setup to support infrastructure tests
+              stage ('Approval') {
+                steps {
+                  slackSend channel: 'app_updates', color: 'good', message: "Attention: Approval for job: ${env.JOB_NAME} #${env.BUILD_NUMBER} required for deployment."
 
-          steps {
-            try {
-
-            }
-            catch(e){
-              error "Integration Test failed"
-
-              slackSend channel: 'app_updates', color: 'warning', message: 'Integration Test Error'
-
-            }finally{
-
+                  timeout(time:3, unit:'DAYS') {
+                    input 'Approval required for deployment?'
+                  }
+                }
+              }
             }
           }
-        }
-        stage ('Quality Analysis') {
-            steps {
-              // SonarQube
-              slackSend channel: 'app_updates', color: 'good', message: 'Quality Analysis Stage Complete'
-            }
-        }
-        stage ('Approval') {
-          steps {
-            //slack integration
-          }
-        }
 
-        stage('Publish') {
-            steps {
-                echo 'push docker image'
-                docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
-                  customImage.push("${env.BUILD_NUMBER}")
-                  customImage.push("latest")
-                }
-            }
-        }
-        stage('Deploy'){
+        stage('Deploy Local'){
+          //change to { label local }
+          agent { label 'worker' }
+          when {
+            equals expected: 'local',
+            actual: DEPLOY_MODE
+            beforeAgent true
+          }
           steps {
+              echo 'Deploy local'
+              //docker compose to simulate existing infrastructure
+              sh "docker-compose -f ${docker_compose_setup} up -d --build"
               // change nginx conf to allow blue green deployment
               // docker compose up
-
               // publish to a docker swarm set of nodes
+              // make sure that compose pulls the tested and newly uploaded image
+
+              //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
+              //docker compose to deploy new version
+              sh "docker-compose -f ${docker_compose_deploy} up -d --build"
+              // script {
+              //   currentBuild.result = 'SUCCESS'
+              // }
 
           }
         }
-        stage('Cleanup') {
+
+        stage('Deploy Production'){
+          //change to { label production }
+          agent { label 'worker' }
+          when {
+            equals expected: 'production',
+            actual: DEPLOY_MODE
+            beforeAgent true
+          }
           steps {
-            sh 'echo "Remove Unused docker image"'
-            sh "docker rmi $registry:$BUILD_NUMBER"
+            echo 'Deploy production entered'
+            // change nginx conf to allow blue green deployment
+            // docker compose up
+            // publish to a docker swarm set of nodes
+            // make sure that compose pulls the tested and newly uploaded image
+
+            //using compose in production: https://docs.docker.com/compose/production/
+            //rebuilds the image for blue and then stop, destroy, and recreate just the blue service
+            //--no-deps flag prevents Compose from also recreating any services which blue depends on
+            sh "docker-compose build blue"
+            sh "docker-compose up --no-deps -d blue"
+
+            sh "docker-compose build green"
+            sh "docker-compose up --no-deps -d green"
+
+
+            //docker compose to deploy new version
+            sh "docker-compose -f ${docker_compose_deploy} up -d --build"
+
+            // script {
+            //   currentBuild.result = 'SUCCESS'
+            // }
           }
         }
-        post {
-          always {
-            deleteDir() /* clean up our workspace */
+      }
+
+      post {
+        always {
+          node('worker'){
+            //step {
+              echo 'post => always section'
+              /* clean up our workspace */
+              //deleteDir()
+
+              //Cleanup Docker
+              //sh 'docker system prune -a -f'
+              //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
+            //}
+
           }
-          changed {
-            echo 'Things were different before...'
-          }
-          failure {
-            slackSend channel: 'app_updates', color: 'good', message: "Attention: ${env.JOB_NAME} #${env.BUILD_NUMBER} has failed."
-          }
-          success {
-            slackSend channel: 'app_updates', color: 'good', message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
-          }
-          unstable {
-            echo 'I am unstable :/'
-          }
+
         }
+        changed {
+          echo 'Things were different before...'
+        }
+        failure {
+          slackSend channel: 'app_updates', color: 'good', message: "Attention: ${env.JOB_NAME} #${env.BUILD_NUMBER} has failed."
+        }
+        success {
+          slackSend channel: 'app_updates', color: 'good', message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+        }
+        unstable {
+          echo 'I am unstable :/'
+        }
+      }
 }

@@ -8,13 +8,10 @@ services:
     image: nginx-custom
     container_name: proxy
     restart: always
-    ports:
-      - '80:80'
-    environment:
-      - NGINX_SERVER_NAME=node1
     network_mode: "host"
     depends_on:
-      - web
+      - blue
+      - green
 
   consul:
     build:
@@ -23,25 +20,16 @@ services:
     image: consul-custom
     container_name: consul
     restart: always
-    ports:
-      - '8500:8500'
-    environment:
-      - NODE_NAME=node1
-      - BIND_IP=192.168.60.10
     network_mode: "host"
 
-  web:
-    build:
-      context: .
-      dockerfile: golang.Dockerfile
-    image: web
-    container_name: web
+  blue:
+    container_name: blue
     restart: always
-    ports:
-      - '8060:8060'
-    environment:
-      - NAME_WEB=web
-      - PORT=8060
+    network_mode: "host"
+
+  green:
+    container_name: green
+    restart: always
     network_mode: "host"
 
   registrator:

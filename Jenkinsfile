@@ -14,10 +14,11 @@ pipeline {
       string(name: 'gocode', defaultValue: '*.go')
       string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile')
       string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile')
-      string(name: 'docker_compose_test', defaultValue: 'docker-compose-test.yml')
-      string(name: 'docker_compose_setup', defaultValue: 'docker-compose-setup.yml')
-      string(name: 'docker_compose_deploy', defaultValue: 'docker-compose-deploy.yml')
+      string(name: 'docker_compose_main', defaultValue: 'docker-compose.yml')
+      string(name: 'docker_compose_prod', defaultValue: 'docker-compose.production.yml')
       string(name: 'DEPLOY_MODE', defaultValue: 'local')
+      string(name: 'DEPLOY_VERS', defaultValue: 'blue')
+      string(name: 'DEPLOY_PORT', defaultValue: '8060')
     }
     stages {
 
@@ -30,15 +31,64 @@ pipeline {
                   }
               }
 
+              stage('Launch') {
+                  steps {
+                    //start all services
+                      sh "docker-compose -f ${docker_compose_main} up -d"
+
+                      waitUntil {
+                        script {
+                          def consul_check = sh "nc -z localhost 8500"
+                          consul_check == 0
+                        }
+                      }
+
+                    //create Keys
+
+                      sh "curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight"
+                      sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight"
+                      sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web"
+                      currentBuild.result = 'UNSTABLE'
+                      return
+                  }
+              }
+
               stage('Build') {
                   steps {
+
+
+                      //CHECK CURRENT
+                      1) check nginx file for current deploy-vers
+
+                      shield user from blue/green states
+                      applying weight to new version should shield user from whether blue or green
+                      should do this via bash script e.g old_vers=4, new_vers=1
+
+                      2) update nginx file with consul-template info
+                      3) create keys
+
+                      4) query consul key states of prod/green_weight and prod/blue_weight
+                          - if both are greater than/equal 1: send alert message
+                          -
+                          - set variable CURRENT_STATE based on nginx analysis to BLUE or GREEN
                       // setup container for testing
 
-                      // dockerfile should be scaled down just for tests
-                      //=> build.Dockerfile
+                      curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
+
+                      curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
+
+                      curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
+
+                      curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
+
+                      //run command inside container
+                      docker exec blue scripts/var_kv.sh st=1 v1=1 v2=0
+
+                      docker exec -it blue echo "Hello from container!"
+
                       script {
                         try {
-                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
+                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","--build-arg build_name=${DEPLOY_VERS} build_port=${DEPLOY_PORT}  -f ${dockerfile_Build} ." )
                         }
                         catch(e){
                           echo "Caught: ${e}"
@@ -154,16 +204,23 @@ pipeline {
           }
           steps {
               echo 'Deploy local'
-              //docker compose to simulate existing infrastructure
-              sh "docker-compose -f ${docker_compose_setup} up -d --build"
+              //first: deploy docker compose to simulate existing infrastructure
               // change nginx conf to allow blue green deployment
               // docker compose up
               // publish to a docker swarm set of nodes
               // make sure that compose pulls the tested and newly uploaded image
 
-              //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
-              //docker compose to deploy new version
-              sh "docker-compose -f ${docker_compose_deploy} up -d --build"
+              //make sure env variables are correct in docker-compose files
+              // NGINX_SERVER_NAME
+              // NODE_NAME
+              // BIND_IP
+
+              sh "docker-compose -f ${docker_compose_main} build blue"
+              sh "docker-compose -f ${docker_compose_main} up --no-deps -d blue"
+
+              sh "docker-compose -f ${docker_compose_main} build green"
+              sh "docker-compose -f ${docker_compose_main} up --no-deps -d green"
+
               // script {
               //   currentBuild.result = 'SUCCESS'
               // }
@@ -180,15 +237,20 @@ pipeline {
             beforeAgent true
           }
           steps {
-            sh "Deploy production entered"
+            echo 'Deploy production entered'
             // change nginx conf to allow blue green deployment
             // docker compose up
             // publish to a docker swarm set of nodes
             // make sure that compose pulls the tested and newly uploaded image
 
-            //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
-            //docker compose to deploy new version
-            sh "docker-compose -f ${docker_compose_deploy} up -d --build"
+            //using compose in production: https://docs.docker.com/compose/production/
+            //rebuilds the image for blue and then stop, destroy, and recreate just the blue service
+            //--no-deps flag prevents Compose from also recreating any services which blue depends on
+            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build blue"
+            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d blue"
+
+            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
+            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
 
             // script {
             //   currentBuild.result = 'SUCCESS'
@@ -207,7 +269,7 @@ pipeline {
 
               //Cleanup Docker
               //sh 'docker system prune -a -f'
-              //sh 'docker rmi $(docker images --filter=reference="mattmyers3491/jenkins-test:*" -q) -f || true'
+              //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
             //}
 
           }

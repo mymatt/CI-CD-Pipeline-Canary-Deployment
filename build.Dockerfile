@@ -1,6 +1,14 @@
 #go
 FROM golang:latest
 
+ARG build_name=blue
+
+ENV NAME_WEB=$build_name
+
+ARG build_port=8060
+
+ENV PORT=$build_port
+
 RUN \
   apt-get update \
   && apt-get -y install gettext-base runit \
