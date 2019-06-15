@@ -34,8 +34,9 @@ pipeline {
               stage('Launch') {
                   steps {
                     //start all services
+                      echo "Launch Services"
                       sh "docker-compose -f ${docker_compose_main} up -d"
-
+                      echo "Waiting for consul"
                       waitUntil {
                         script {
                           def consul_check = sh "nc -z localhost 8500"
@@ -49,8 +50,7 @@ pipeline {
                       sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight"
                       sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web"
                       script {
-                        currentBuild.result = 'UNSTABLE'
-                        return
+                        error "exit "
                       }
 
                   }
