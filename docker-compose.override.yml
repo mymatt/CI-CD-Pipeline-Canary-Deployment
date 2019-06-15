@@ -18,8 +18,14 @@ services:
     image: mattmyers3491/jenkins-test:latest
     ports:
       - '8060:8060'
+    environment:
+      - NAME_WEB=blue
+      - PORT=8060
 
   green:
     image: mattmyers3491/jenkins-test:latest
     ports:
       - '8070:8070'
+    environment:
+      - NAME_WEB=green
+      - PORT=8070
