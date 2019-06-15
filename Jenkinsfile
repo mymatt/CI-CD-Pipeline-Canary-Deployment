@@ -17,6 +17,7 @@ pipeline {
       string(name: 'docker_compose_main', defaultValue: 'docker-compose.yml')
       string(name: 'docker_compose_override', defaultValue: 'docker-compose.override.yml')
       string(name: 'docker_compose_prod', defaultValue: 'docker-compose.production.yml')
+      string(name: 'LOCAL_TEST', defaultValue: 'true')
       string(name: 'DEPLOY_MODE', defaultValue: 'local')
       string(name: 'DEPLOY_VERS', defaultValue: 'blue')
       string(name: 'DEPLOY_PORT', defaultValue: '8060')
@@ -33,6 +34,10 @@ pipeline {
               }
 
               stage('Launch') {
+                  when {
+                    equals expected: 'true',
+                    actual: LOCAL_TEST
+                  }
                   steps {
                     //start all services
                       echo "Launch Services"
