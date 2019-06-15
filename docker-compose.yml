@@ -10,16 +10,16 @@ services:
     restart: always
     network_mode: "host"
 
-  consulKV:
-    image: consul-custom
-    command: \
-      bash -c \
-      'curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight \
-      && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight \
-      && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web'
-    network_mode: "host"
-    depends_on:
-      - consul
+  # consulKV:
+  #   image: consul-custom
+  #   command: \
+  #     bash -c \
+  #     'curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight \
+  #     && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight \
+  #     && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web'
+  #   network_mode: "host"
+  #   depends_on:
+  #     - consul
 
   blue:
     image: mattmyers3491/jenkins-test:latest
