@@ -1,19 +1,6 @@
 version: '3'
 
 services:
-  proxy:
-    build:
-      context: .
-      dockerfile: nginx.Dockerfile
-    image: nginx-custom
-    container_name: proxy
-    restart: always
-    network_mode: "host"
-    depends_on:
-      - blue
-      - green
-      - consul
-
   consul:
     build:
       context: .
@@ -22,6 +9,16 @@ services:
     container_name: consul
     restart: always
     network_mode: "host"
+
+  consulKV:
+    image: consul-custom
+    command: \
+      curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight \
+      && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight \
+      && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web"
+    network_mode: "host"
+    depends_on:
+      - consul
 
   blue:
     image: mattmyers3491/jenkins-test:latest
@@ -38,6 +35,19 @@ services:
       - "SERVICE_NAME=green" #for registrator, default uses image name as service name
     restart: always
     network_mode: "host"
+
+  proxy:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    image: nginx-custom
+    container_name: proxy
+    restart: always
+    network_mode: "host"
+    depends_on:
+      - blue
+      - green
+      - consul
 
   registrator:
     image: gliderlabs/registrator:latest

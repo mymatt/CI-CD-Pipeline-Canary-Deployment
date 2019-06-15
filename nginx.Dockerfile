@@ -32,7 +32,4 @@ RUN chmod a+x /etc/service/consul-template/run
 ADD scripts/nginx-start.sh /
 RUN chmod u+x /nginx-start.sh
 
-# Add, initialise consul keys that apply weighting to blue and green services in nginx.conf.ctmpl
-RUN curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight && curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
-
 CMD ["/nginx-start.sh"]
