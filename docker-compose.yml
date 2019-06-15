@@ -23,11 +23,13 @@ services:
     network_mode: "host"
 
   blue:
+    image: mattmyers3491/jenkins-test:latest
     container_name: blue
     restart: always
     network_mode: "host"
 
   green:
+    image: mattmyers3491/jenkins-test:latest
     container_name: green
     restart: always
     network_mode: "host"
