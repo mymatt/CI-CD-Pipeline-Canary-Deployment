@@ -57,7 +57,7 @@ pipeline {
                         curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
                       '''
                       // reload consul template to read key entries
-                      sh 'docker exec -it proxy killall -SIGHUP consul-template'
+                      sh 'docker exec proxy killall -SIGHUP consul-template'
 
                       script {
                         error "exit "
