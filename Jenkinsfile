@@ -58,33 +58,33 @@ pipeline {
 
 
                       //CHECK CURRENT
-                      1) check nginx file for current deploy-vers
-
-                      shield user from blue/green states
-                      applying weight to new version should shield user from whether blue or green
-                      should do this via bash script e.g old_vers=4, new_vers=1
-
-                      2) update nginx file with consul-template info
-                      3) create keys
-
-                      4) query consul key states of prod/green_weight and prod/blue_weight
-                          - if both are greater than/equal 1: send alert message
-                          -
-                          - set variable CURRENT_STATE based on nginx analysis to BLUE or GREEN
-                      // setup container for testing
-
-                      curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
-
-                      curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
-
-                      curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
-
-                      curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
-
-                      //run command inside container
-                      docker exec blue scripts/var_kv.sh st=1 v1=1 v2=0
-
-                      docker exec -it blue echo "Hello from container!"
+                      // 1) check nginx file for current deploy-vers
+                      //
+                      // shield user from blue/green states
+                      // applying weight to new version should shield user from whether blue or green
+                      // should do this via bash script e.g old_vers=4, new_vers=1
+                      //
+                      // 2) update nginx file with consul-template info
+                      // 3) create keys
+                      //
+                      // 4) query consul key states of prod/green_weight and prod/blue_weight
+                      //     - if both are greater than/equal 1: send alert message
+                      //     -
+                      //     - set variable CURRENT_STATE based on nginx analysis to BLUE or GREEN
+                      // // setup container for testing
+                      //
+                      // curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
+                      //
+                      // curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
+                      //
+                      // curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
+                      //
+                      // curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
+                      //
+                      // //run command inside container
+                      // docker exec blue scripts/var_kv.sh st=1 v1=1 v2=0
+                      //
+                      // docker exec -it blue echo "Hello from container!"
 
                       script {
                         try {
