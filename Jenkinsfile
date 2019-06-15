@@ -35,7 +35,6 @@ pipeline {
               stage('Launch') {
                   steps {
                     //start all services
-                      sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} down"
                       echo "Launch Services"
                       sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
                       echo "Waiting for consul"
