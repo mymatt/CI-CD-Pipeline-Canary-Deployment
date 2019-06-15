@@ -98,7 +98,7 @@ pipeline {
 
                       script {
                         try {
-                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","--build-arg build_name=${DEPLOY_VERS} build_port=${DEPLOY_PORT}  -f ${dockerfile_Build} ." )
+                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","--build-arg build_name=${DEPLOY_VERS} --build-arg build_port=${DEPLOY_PORT}  -f ${dockerfile_Build} ." )
                         }
                         catch(e){
                           echo "Caught: ${e}"
