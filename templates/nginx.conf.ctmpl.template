@@ -9,11 +9,15 @@ events {}
 
     upstream main {
         {{range service "blue"}}
-            server {{.Address}}:{{.Port}};
+          {{if ne (keyOrDefault "prod/blue_weight" "0") "0" }}
+            server {{.Address}}:{{.Port}} weight={{ keyOrDefault "prod/blue_weight" "1" }};
+          {{ end }}
         {{ end }}
 
         {{range service "green"}}
-            server {{.Address}}:{{.Port}};
+          {{if ne (keyOrDefault "prod/green_weight" "0") "0" }}
+            server {{.Address}}:{{.Port}} weight={{ keyOrDefault "prod/green_weight" "1" }};
+          {{ end }}
         {{ end }}
     }
 
