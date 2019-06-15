@@ -37,13 +37,19 @@ pipeline {
                     //start all services
                       echo "Launch Services"
                       sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
-                      echo "Waiting for consul"
-                      waitUntil {
-                        script {
-                          def consul_check = sh "nc -z localhost 8500"
-                          consul_check == 0
-                        }
-                      }
+                      // waitUntil {
+                      //   script {
+                      //     def consul_check = sh "nc -z localhost 8500"
+                      //     consul_check == 0
+                      //   }
+                      // }
+                      sh '''
+                        echo "Attempting to connect to consul"
+                        until $(nc -zv 192.168.60.10 8500); do
+                        printf '.'
+                        sleep 5
+                        done
+                      '''
 
                     //create Keys
 
