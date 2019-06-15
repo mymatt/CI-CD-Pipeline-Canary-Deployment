@@ -12,10 +12,9 @@ events {}
             server {{.Address}}:{{.Port}}{{ end }} {{if ne (keyOrDefault "prod/blue_weight" "0") "0" }}weight={{ keyOrDefault "prod/blue_weight" "1" }};
           {{ end }}
 
-        {{range service "green"}}
-          {{if ne (keyOrDefault "prod/green_weight" "0") "0" }}
-            server {{.Address}}:{{.Port}} weight={{ keyOrDefault "prod/green_weight" "1" }};
-          {{ end }}
+
+        {{if ne (keyOrDefault "prod/green_weight" "0") "0" }}
+          {{range service "green"}}server {{.Address}}:{{.Port}}{{ end }} weight={{ keyOrDefault "prod/green_weight" "1" }};
         {{ end }}
     }
 
