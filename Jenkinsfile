@@ -53,9 +53,9 @@ pipeline {
 
                       //create consul Keys
 
-                      sh "curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight"
-                      sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight"
-                      sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web"
+                      // sh "curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight"
+                      // sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight"
+                      // sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web"
                       script {
                         error "exit "
                       }

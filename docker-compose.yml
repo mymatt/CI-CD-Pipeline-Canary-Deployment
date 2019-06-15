@@ -12,6 +12,7 @@ services:
     depends_on:
       - blue
       - green
+      - consul
 
   consul:
     build:
