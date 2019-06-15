@@ -3,7 +3,7 @@ FROM nginx:latest
 
 RUN \
   apt-get update \
-  && apt-get -y install apache2-utils curl unzip runit \
+  && apt-get -y install apache2-utils curl unzip procps runit \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
