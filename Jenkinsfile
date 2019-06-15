@@ -15,6 +15,7 @@ pipeline {
       string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile')
       string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile')
       string(name: 'docker_compose_main', defaultValue: 'docker-compose.yml')
+      string(name: 'docker_compose_override', defaultValue: 'docker-compose.override.yml')
       string(name: 'docker_compose_prod', defaultValue: 'docker-compose.production.yml')
       string(name: 'DEPLOY_MODE', defaultValue: 'local')
       string(name: 'DEPLOY_VERS', defaultValue: 'blue')
@@ -34,8 +35,9 @@ pipeline {
               stage('Launch') {
                   steps {
                     //start all services
+                      sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} down"
                       echo "Launch Services"
-                      sh "docker-compose -f ${docker_compose_main} up -d"
+                      sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
                       echo "Waiting for consul"
                       waitUntil {
                         script {

@@ -7,14 +7,19 @@ events {}
 
     access_log /var/log/nginx/access.log;
 
-    # service "web" is "image" name in dockerfile
-    {{range service "web"}}
-    upstream web {
-      least_conn;
-      server {{.Address}}:{{.Port}} max_fails=3 fail_timeout=60 weight=1;
-    }
-    {{end}}
+    upstream main {
+        {{range service "blue"}}
+          {{if ne (keyOrDefault "prod/blue_weight" "0") "0" }}
+            server {{.Address}}:{{.Port}} weight={{ keyOrDefault "prod/blue_weight" "1" }};
+          {{ end }}
+        {{ end }}
 
+        {{range service "green"}}
+          {{if ne (keyOrDefault "prod/green_weight" "0") "0" }}
+            server {{.Address}}:{{.Port}} weight={{ keyOrDefault "prod/green_weight" "1" }};
+          {{ end }}
+        {{ end }}
+    }
 
     server{
 
@@ -22,13 +27,11 @@ events {}
       server_name ${NGINX_SERVER_NAME};
 
       location = / {
+      {{ if eq (keyOrDefault "prod/start_web" "0") "0" }}
         return 200 "Hello from NGINX Proxy\n";
+      {{ else if eq (keyOrDefault "prod/start_web" "0") "1" }}
+        proxy_pass http://main;
+      {{ end }}
       }
-
-      {{range service "web"}}
-      location /web {
-        proxy_pass http://web;
-      }
-      {{end}}
     }
   }
