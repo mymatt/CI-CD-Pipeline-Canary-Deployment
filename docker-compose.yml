@@ -25,12 +25,16 @@ services:
   blue:
     image: mattmyers3491/jenkins-test:latest
     container_name: blue
+    labels:
+      - "SERVICE_NAME=blue" #for registrator, default uses image name as service name
     restart: always
     network_mode: "host"
 
   green:
     image: mattmyers3491/jenkins-test:latest
     container_name: green
+    labels:
+      - "SERVICE_NAME=green" #for registrator, default uses image name as service name
     restart: always
     network_mode: "host"
 
