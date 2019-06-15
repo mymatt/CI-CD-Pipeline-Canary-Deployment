@@ -281,6 +281,8 @@ pipeline {
               //deleteDir()
 
               //Cleanup Docker
+              //stop all containers:
+              // docker stop $(docker ps -aq)
               //sh 'docker system prune -a -f'
               //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
             //}
