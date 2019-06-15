@@ -32,46 +32,36 @@ pipeline {
                   }
               }
 
-              stage('Launch') {
-                  steps {
-                    //start all services
-                      echo "Launch Services"
-                      sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
-                      // waitUntil {
-                      //   script {
-                      //     def consul_check = sh "nc -z localhost 8500"
-                      //     consul_check == 0
-                      //   }
-                      // }
-                      sh '''
-                        echo "Attempting to connect to consul"
-                        until $(nc -zv 192.168.60.10 8500); do
-                        printf '.'
-                        sleep 5
-                        done
-                      '''
-
-                      //create consul Keys
-                      sh '''
-                        curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
-                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
-                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
-                      '''
-                      // sh "curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight"
-                      // sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight"
-                      // sh "curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web"
-
-                      sh 'docker exec -it proxy killall -SIGHUP consul-template'
-
-                      script {
-                        error "exit "
-                      }
-
-                      // check key value
-                      // curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
-
-                  }
-              }
+              // stage('Launch') {
+              //     steps {
+              //       //start all services
+              //         echo "Launch Services"
+              //         sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
+              //
+              //         sh '''
+              //           echo "Attempting to connect to consul"
+              //           until $(nc -zv 192.168.60.10 8500); do
+              //           printf '.'
+              //           sleep 5
+              //           done
+              //         '''
+              //         //create consul Keys
+              //         sh '''
+              //           curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
+              //           curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
+              //           curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
+              //         '''
+              //         sh 'docker exec -it proxy killall -SIGHUP consul-template'
+              //
+              //         script {
+              //           error "exit "
+              //         }
+              //
+              //         // check key value
+              //         // curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
+              //
+              //     }
+              // }
 
               stage('Build') {
                   steps {
@@ -116,6 +106,7 @@ pipeline {
                           error "Build stage failed"
                         }
                         finally{
+                          error "exit "
                         }
                       }
                   }
