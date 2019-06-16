@@ -1,4 +1,7 @@
 
+def blue = '0'
+def green = '0'
+
 pipeline {
 
     environment {
@@ -52,8 +55,7 @@ pipeline {
                         sleep 5
                         done
                       '''
-                      def blue = "0";
-                      def green = "0";
+
                       //create consul Keys
                       sh '''
                         curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/blue_weight
@@ -65,12 +67,14 @@ pipeline {
 
                       // check key value
 
-                      sh '''
-                        blue = curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
-                        green = curl -XGET 'http://localhost:8500/v1/kv/prod/green_weight?raw=1'
-                      '''
-                      echo "blue values is: $blue"
-                      echo "green values is: $green"
+                      script {
+                        blue = sh "curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'"
+                        green = sh "curl -XGET 'http://localhost:8500/v1/kv/prod/green_weight?raw=1'"
+                      }
+
+
+                      echo "blue values is: ${blue}"
+                      echo "green values is: ${green}"
 
                       script {
                         error "exit "
