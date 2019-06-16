@@ -11,7 +11,7 @@ pipeline {
       registry = "mattmyers3491"
       registryCredential = "dockerhub"
       image = "jenkins-test"
-      curr_image = "${registry}/${image}:${env.BUILD_ID}"
+      current_image = "${registry}/${image}:${env.BUILD_ID}"
     }
 
     agent none
@@ -85,13 +85,13 @@ pipeline {
 
                       if (blue == '0'){
                         echo "blue is offline"
-                        DEPLOY_VERS = 'blue_4'
+                        DEPLOY_VERS = 'blue_3'
                         DEPLOY_PORT = 8060
                         next_state = 'blue'
                       }
                       else if (green == '0'){
                         echo "green is offline"
-                        DEPLOY_VERS = 'green_12'
+                        DEPLOY_VERS = 'green_23'
                         DEPLOY_PORT = 8070
                         next_state = 'green'
                       }
@@ -247,6 +247,7 @@ pipeline {
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
                 }
+                currentBuild.result = 'SUCCESS'
               }
 
               // script {
@@ -283,6 +284,7 @@ pipeline {
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
               }
+              currentBuild.result = 'SUCCESS'
             }
 
             // script {

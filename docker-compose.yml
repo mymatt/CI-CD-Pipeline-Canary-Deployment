@@ -11,7 +11,7 @@ services:
     network_mode: "host"
 
   blue:
-    image: mattmyers3491/jenkins-test:latest
+    image: ${current_image}
     container_name: blue
     labels:
       - "SERVICE_NAME=blue" #for registrator, default uses image name as service name
@@ -19,7 +19,7 @@ services:
     network_mode: "host"
 
   green:
-    image: mattmyers3491/jenkins-test:latest
+    image: ${current_image}
     container_name: green
     labels:
       - "SERVICE_NAME=green" #for registrator, default uses image name as service name
