@@ -23,9 +23,6 @@ pipeline {
       string(name: 'DEPLOY_PORT', defaultValue: '8060')
     }
 
-    def blue = "0"
-    def green = "0"
-
     stages {
 
         stage('Build and Test') {
@@ -55,6 +52,8 @@ pipeline {
                         sleep 5
                         done
                       '''
+                      def blue = "0";
+                      def green = "0";
                       //create consul Keys
                       sh '''
                         curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/blue_weight
