@@ -296,7 +296,9 @@ pipeline {
         always {
           node('worker'){
             step {
-              echo "Post Always Section: To Launch new Version add weight value greater than 0 for ${next_state} service"
+              script {
+                echo "Post Always Section: To Launch new Version add weight value greater than 0 for ${next_state} service"
+              }
               /* clean up our workspace */
               //deleteDir()
 
