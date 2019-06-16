@@ -69,11 +69,12 @@ pipeline {
 
                       script {
                         //sh "blue = 'curl -XGET http://localhost:8500/v1/kv/prod/blue_weight?raw=1'"
-                        sh 'green = curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1'
+                        //sh 'green = curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1'
+                        green = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1')
                       }
 
 
-                      echo "blue values is: ${blue}"
+                      //echo "blue values is: ${blue}"
                       echo "green values is: ${green}"
 
                       script {
