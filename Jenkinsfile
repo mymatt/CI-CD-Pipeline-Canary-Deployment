@@ -60,7 +60,7 @@ pipeline {
                       //create consul Keys
                       sh '''
                         curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
-                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
+                        curl -X PUT -d 3 http://localhost:8500/v1/kv/prod/green_weight
                         curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
                       '''
                       // reload consul template to read key entries and update nginx.conf
