@@ -43,6 +43,7 @@ pipeline {
                       echo "Launch Services"
                       sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
 
+                      //check if consul server is running
                       sh '''
                         echo "Attempting to connect to consul"
                         until $(nc -zv 192.168.60.10 8500); do
@@ -52,19 +53,24 @@ pipeline {
                       '''
                       //create consul Keys
                       sh '''
-                        curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
-                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
+                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/blue_weight
+                        curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/green_weight
                         curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
                       '''
-                      // reload consul template to read key entries
+                      // reload consul template to read key entries and update nginx.conf
                       sh 'docker exec proxy killall -SIGHUP consul-template'
+
+                      // check key value
+                      sh '''
+                        blue = curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
+                        green = curl -XGET 'http://localhost:8500/v1/kv/prod/green_weight?raw=1'
+                      '''
+                      echo "blue values is: $blue"
+                      echo "green values is: $green"
 
                       script {
                         error "exit "
                       }
-
-                      // check key value
-                      // curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
 
                   }
               }
@@ -232,11 +238,11 @@ pipeline {
               // NODE_NAME
               // BIND_IP
 
-              sh "docker-compose -f ${docker_compose_main} build blue"
-              sh "docker-compose -f ${docker_compose_main} up --no-deps -d blue"
+              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
+              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d blue"
 
-              sh "docker-compose -f ${docker_compose_main} build green"
-              sh "docker-compose -f ${docker_compose_main} up --no-deps -d green"
+              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
+              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
 
               // script {
               //   currentBuild.result = 'SUCCESS'
@@ -289,6 +295,7 @@ pipeline {
               // docker stop $(docker ps -aq)
               // delete containers
               // docker container prune -f
+
               //sh 'docker system prune -a -f'
               //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
             //}
