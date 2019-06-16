@@ -1,4 +1,10 @@
 
+// Blue Green Deployment Pipeline
+
+def blue = '0'
+def green = '0'
+def next_state = 'nil'
+
 pipeline {
 
     environment {
@@ -14,11 +20,15 @@ pipeline {
       string(name: 'gocode', defaultValue: '*.go')
       string(name: 'dockerfile_Build', defaultValue: 'build.Dockerfile')
       string(name: 'dockerfile_Deploy', defaultValue: 'deploy.Dockerfile')
-      string(name: 'docker_compose_test', defaultValue: 'docker-compose-test.yml')
-      string(name: 'docker_compose_setup', defaultValue: 'docker-compose-setup.yml')
-      string(name: 'docker_compose_deploy', defaultValue: 'docker-compose-deploy.yml')
+      string(name: 'docker_compose_main', defaultValue: 'docker-compose.yml')
+      string(name: 'docker_compose_override', defaultValue: 'docker-compose.override.yml')
+      string(name: 'docker_compose_prod', defaultValue: 'docker-compose.production.yml')
+      string(name: 'LOCAL_TEST', defaultValue: 'true')
       string(name: 'DEPLOY_MODE', defaultValue: 'local')
+      string(name: 'DEPLOY_VERS', defaultValue: 'blue')
+      string(name: 'DEPLOY_PORT', defaultValue: '8060')
     }
+
     stages {
 
         stage('Build and Test') {
@@ -30,24 +40,88 @@ pipeline {
                   }
               }
 
+              stage('Launch') {
+                  when {
+                    equals expected: 'true',
+                    actual: LOCAL_TEST
+                  }
+                  steps {
+                    //start all services
+                    // for local testing only
+                      echo "Launch Services"
+                      sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
+
+                      //check if able to connect to consul server
+                      sh '''
+                        echo "Attempting to connect to consul"
+                        until $(nc -zv 192.168.60.10 8500); do
+                        printf '.'
+                        sleep 4
+                        done
+                      '''
+
+                      //create consul Keys
+                      sh '''
+                        curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
+                        curl -X PUT -d 3 http://localhost:8500/v1/kv/prod/green_weight
+                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
+                      '''
+                      // reload consul template to read key entries and update nginx.conf
+                      sh 'docker exec proxy killall -SIGHUP consul-template'
+
+                  }
+              }
+
               stage('Build') {
                   steps {
-                      // setup container for testing
+                    // check key value and determine which service (blue or green) is live
+                    // the offline service is then rebuilt
+                    script {
+                      green = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1')
+                      blue = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/blue_weight?raw=1')
 
-                      // dockerfile should be scaled down just for tests
-                      //=> build.Dockerfile
-                      script {
-                        try {
-                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","-f ${dockerfile_Build} ." )
-                        }
-                        catch(e){
-                          echo "Caught: ${e}"
-                          currentBuild.result = 'FAILURE'
-                          error "Build stage failed"
-                        }
-                        finally{
-                        }
+                      echo "blue: ${blue}"
+                      echo "green: ${green}"
+
+                      if (blue == '0'){
+                        echo "blue is offline"
+                        DEPLOY_VERS = 'blue'
+                        DEPLOY_PORT = 8060
+                        next_state = 'blue'
                       }
+                      else if (green == '0'){
+                        echo "green is offline"
+                        DEPLOY_VERS = 'green'
+                        DEPLOY_PORT = 8070
+                        next_state = 'green'
+                      }
+                      else {
+                        echo "green and blue both online"
+                        slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
+
+                        error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
+                      }
+                      // echo "vers: ${DEPLOY_VERS}"
+                      // echo "port: ${DEPLOY_PORT}"
+                    }
+
+                    script {
+                      error "exit "
+                    }
+
+                    script {
+                      try {
+                        customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","--build-arg build_name=${DEPLOY_VERS} --build-arg build_port=${DEPLOY_PORT}  -f ${dockerfile_Build} ." )
+                      }
+                      catch(e){
+                        echo "Caught: ${e}"
+                        currentBuild.result = 'FAILURE'
+                        error "Build stage failed"
+                      }
+                      finally{
+
+                      }
+                    }
                   }
               }
 
@@ -126,7 +200,7 @@ pipeline {
                           currentBuild.result = 'FAILURE'
                           error "Publish failed"
                         }finally{
-                          //?????
+
                         }
                       }
                   }
@@ -134,7 +208,7 @@ pipeline {
 
               stage ('Approval') {
                 steps {
-                  slackSend channel: 'app_updates', color: 'good', message: "Attention: Approval for job: ${env.JOB_NAME} #${env.BUILD_NUMBER} required for deployment."
+                  slackSend channel: 'app_updates', color: 'good', message: "Attention: Approval for job: ${env.JOB_NAME} #${env.BUILD_NUMBER} required to deploy as ${next_state} service."
 
                   timeout(time:3, unit:'DAYS') {
                     input 'Approval required for deployment?'
@@ -154,16 +228,27 @@ pipeline {
           }
           steps {
               echo 'Deploy local'
-              //docker compose to simulate existing infrastructure
-              sh "docker-compose -f ${docker_compose_setup} up -d --build"
+              //first: deploy docker compose to simulate existing infrastructure
               // change nginx conf to allow blue green deployment
               // docker compose up
               // publish to a docker swarm set of nodes
               // make sure that compose pulls the tested and newly uploaded image
 
-              //sh 'export image_name=${registry}:${env.BUILD_NUMBER}'
-              //docker compose to deploy new version
-              sh "docker-compose -f ${docker_compose_deploy} up -d --build"
+              //make sure env variables are correct in docker-compose files
+              // NGINX_SERVER_NAME
+              // NODE_NAME
+              // BIND_IP
+              script {
+                if (next_state = 'blue'){
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d blue"
+                }
+                else if (next_state = 'green'){
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
+                }
+              }
+
               // script {
               //   currentBuild.result = 'SUCCESS'
               // }
@@ -189,15 +274,16 @@ pipeline {
             //using compose in production: https://docs.docker.com/compose/production/
             //rebuilds the image for blue and then stop, destroy, and recreate just the blue service
             //--no-deps flag prevents Compose from also recreating any services which blue depends on
-            sh "docker-compose build blue"
-            sh "docker-compose up --no-deps -d blue"
-
-            sh "docker-compose build green"
-            sh "docker-compose up --no-deps -d green"
-
-
-            //docker compose to deploy new version
-            sh "docker-compose -f ${docker_compose_deploy} up -d --build"
+            script {
+              if (next_state = 'blue'){
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build blue"
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d blue"
+              }
+              else if (next_state = 'green'){
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
+              }
+            }
 
             // script {
             //   currentBuild.result = 'SUCCESS'
@@ -209,15 +295,20 @@ pipeline {
       post {
         always {
           node('worker'){
-            //step {
-              echo 'post => always section'
+            step {
+              echo "Post Always Section: To Launch new Version add weight value greater than 0 for ${next_state} service"
               /* clean up our workspace */
               //deleteDir()
 
               //Cleanup Docker
+              //stop all containers:
+              // docker stop $(docker ps -aq)
+              // delete containers
+              // docker container prune -f
+
               //sh 'docker system prune -a -f'
               //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
-            //}
+            }
 
           }
 

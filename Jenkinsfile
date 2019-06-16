@@ -1,6 +1,9 @@
 
+// Blue Green Deployment Pipeline
+
 def blue = '0'
 def green = '0'
+def next_state = 'nil'
 
 pipeline {
 
@@ -60,91 +63,65 @@ pipeline {
                       //create consul Keys
                       sh '''
                         curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
-                        curl -X PUT -d 3 http://localhost:8500/v1/kv/prod/green_weight
-                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
+                        curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
+                        curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/start_web
                       '''
                       // reload consul template to read key entries and update nginx.conf
                       sh 'docker exec proxy killall -SIGHUP consul-template'
-
-                      // check key value
-                      script {
-                        green = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1')
-                        blue = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/blue_weight?raw=1')
-
-                        echo "blue: ${blue}"
-                        echo "green: ${green}"
-
-                        if (blue == '0'){
-                          echo "in blue"
-                          DEPLOY_VERS = 'blue'
-                          DEPLOY_PORT = 8060
-                        }else if (green == '0'){
-                          echo "in green"
-                          DEPLOY_VERS = 'green'
-                          DEPLOY_PORT = 8070
-                        }else {
-                          echo "in here...green and blue live"
-                          slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
-
-                          error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
-                        }
-                        echo "vers: ${DEPLOY_VERS}"
-                        echo "port: ${DEPLOY_PORT}"
-                      }
-
-                      script {
-                        error "exit "
-                      }
 
                   }
               }
 
               stage('Build') {
                   steps {
+                    // check key value and determine which service (blue or green) is live
+                    // the offline service is then rebuilt
+                    script {
+                      green = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1')
+                      blue = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/blue_weight?raw=1')
 
+                      echo "blue: ${blue}"
+                      echo "green: ${green}"
 
-                      //CHECK CURRENT
-                      // 1) check nginx file for current deploy-vers
-                      //
-                      // shield user from blue/green states
-                      // applying weight to new version should shield user from whether blue or green
-                      // should do this via bash script e.g old_vers=4, new_vers=1
-                      //
-                      // 2) update nginx file with consul-template info
-                      // 3) create keys
-                      //
-                      // 4) query consul key states of prod/green_weight and prod/blue_weight
-                      //     - if both are greater than/equal 1: send alert message
-                      //     -
-                      //     - set variable CURRENT_STATE based on nginx analysis to BLUE or GREEN
-                      // // setup container for testing
-                      //
-                      // curl -X PUT -d 1 http://localhost:8500/v1/kv/prod/blue_weight
-                      //
-                      // curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/green_weight
-                      //
-                      // curl -X PUT -d 0 http://localhost:8500/v1/kv/prod/start_web
-                      //
-                      // curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
-                      //
-                      // //run command inside container
-                      // docker exec blue scripts/var_kv.sh st=1 v1=1 v2=0
-                      //
-                      // docker exec -it blue echo "Hello from container!"
-
-                      script {
-                        try {
-                          customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","--build-arg build_name=${DEPLOY_VERS} --build-arg build_port=${DEPLOY_PORT}  -f ${dockerfile_Build} ." )
-                        }
-                        catch(e){
-                          echo "Caught: ${e}"
-                          currentBuild.result = 'FAILURE'
-                          error "Build stage failed"
-                        }
-                        finally{
-
-                        }
+                      if (blue == '0'){
+                        echo "blue is offline"
+                        DEPLOY_VERS = 'blue'
+                        DEPLOY_PORT = 8060
+                        next_state = 'blue'
                       }
+                      else if (green == '0'){
+                        echo "green is offline"
+                        DEPLOY_VERS = 'green_12'
+                        DEPLOY_PORT = 8070
+                        next_state = 'green'
+                      }
+                      else {
+                        echo "green and blue both online"
+                        slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
+
+                        error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
+                      }
+                      // echo "vers: ${DEPLOY_VERS}"
+                      // echo "port: ${DEPLOY_PORT}"
+                    }
+
+                    // script {
+                    //   error "exit "
+                    // }
+
+                    script {
+                      try {
+                        customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","--build-arg build_name=${DEPLOY_VERS} --build-arg build_port=${DEPLOY_PORT}  -f ${dockerfile_Build} ." )
+                      }
+                      catch(e){
+                        echo "Caught: ${e}"
+                        currentBuild.result = 'FAILURE'
+                        error "Build stage failed"
+                      }
+                      finally{
+
+                      }
+                    }
                   }
               }
 
@@ -231,7 +208,7 @@ pipeline {
 
               stage ('Approval') {
                 steps {
-                  slackSend channel: 'app_updates', color: 'good', message: "Attention: Approval for job: ${env.JOB_NAME} #${env.BUILD_NUMBER} required for deployment."
+                  slackSend channel: 'app_updates', color: 'good', message: "Attention: Approval for job: ${env.JOB_NAME} #${env.BUILD_NUMBER} required to deploy as ${next_state} service."
 
                   timeout(time:3, unit:'DAYS') {
                     input 'Approval required for deployment?'
@@ -261,12 +238,16 @@ pipeline {
               // NGINX_SERVER_NAME
               // NODE_NAME
               // BIND_IP
-
-              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
-              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d blue"
-
-              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
-              sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
+              script {
+                if (next_state = 'blue'){
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d blue"
+                }
+                else if (next_state = 'green'){
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
+                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
+                }
+              }
 
               // script {
               //   currentBuild.result = 'SUCCESS'
@@ -293,11 +274,16 @@ pipeline {
             //using compose in production: https://docs.docker.com/compose/production/
             //rebuilds the image for blue and then stop, destroy, and recreate just the blue service
             //--no-deps flag prevents Compose from also recreating any services which blue depends on
-            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build blue"
-            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d blue"
-
-            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
-            sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
+            script {
+              if (next_state = 'blue'){
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build blue"
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d blue"
+              }
+              else if (next_state = 'green'){
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
+                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
+              }
+            }
 
             // script {
             //   currentBuild.result = 'SUCCESS'
@@ -309,8 +295,8 @@ pipeline {
       post {
         always {
           node('worker'){
-            //step {
-              echo 'post => always section'
+            step {
+              echo "Post Always Section: To Launch new Version add weight value greater than 0 for ${next_state} service"
               /* clean up our workspace */
               //deleteDir()
 
@@ -322,7 +308,7 @@ pipeline {
 
               //sh 'docker system prune -a -f'
               //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
-            //}
+            }
 
           }
 
