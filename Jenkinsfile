@@ -44,15 +44,16 @@ pipeline {
                   }
                   steps {
                     //start all services
+                    // for local testing only
                       echo "Launch Services"
                       sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
 
-                      //check if consul server is running
+                      //check if able to connect to consul server
                       sh '''
                         echo "Attempting to connect to consul"
                         until $(nc -zv 192.168.60.10 8500); do
                         printf '.'
-                        sleep 5
+                        sleep 4
                         done
                       '''
 
@@ -66,15 +67,26 @@ pipeline {
                       sh 'docker exec proxy killall -SIGHUP consul-template'
 
                       // check key value
-
                       script {
                         green = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1')
                         blue = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/blue_weight?raw=1')
+
+                        if (blue != 0 && green != 0){
+                          slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
+
+                          error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
+                        }
+
+                        if (blue == 0){
+                          DEPLOY_VERS = 'blue'
+                          DEPLOY_PORT = 8060
+                        }else if (green == 0){
+                          DEPLOY_VERS = 'green'
+                          DEPLOY_PORT = 8070
+                        }
+                        echo "vers: ${DEPLOY_VERS}"
+                        echo "port: ${DEPLOY_PORT}"
                       }
-
-
-                      echo "blue values is: ${blue}"
-                      echo "green values is: ${green}"
 
                       script {
                         error "exit "
