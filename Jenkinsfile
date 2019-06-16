@@ -22,6 +22,10 @@ pipeline {
       string(name: 'DEPLOY_VERS', defaultValue: 'blue')
       string(name: 'DEPLOY_PORT', defaultValue: '8060')
     }
+
+    def blue = "0"
+    def green = "0"
+
     stages {
 
         stage('Build and Test') {
@@ -61,8 +65,7 @@ pipeline {
                       sh 'docker exec proxy killall -SIGHUP consul-template'
 
                       // check key value
-                      def blue
-                      def green
+
                       sh '''
                         blue = curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
                         green = curl -XGET 'http://localhost:8500/v1/kv/prod/green_weight?raw=1'
