@@ -71,7 +71,11 @@ pipeline {
                         green = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1')
                         blue = sh(returnStdout: true, script: 'curl -XGET http://localhost:8500/v1/kv/prod/blue_weight?raw=1')
 
+                        echo "blue: ${blue}"
+                        echo "green: ${green}"
+
                         if (blue != 0 && green != 0){
+                          echo "in here..."
                           slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
 
                           error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
