@@ -295,23 +295,22 @@ pipeline {
       post {
         always {
           echo "Post Always Section: To Launch new Version add weight value greater than 0 for ${next_state} service"
-          node('worker'){
-            step {
-
-              /* clean up our workspace */
-              //deleteDir()
-
-              //Cleanup Docker
-              //stop all containers:
-              // docker stop $(docker ps -aq)
-              // delete containers
-              // docker container prune -f
-
-              //sh 'docker system prune -a -f'
-              //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
-            }
-
-          }
+          // node('worker'){
+          //   step {
+          //     /* clean up our workspace */
+          //     //deleteDir()
+          //
+          //     //Cleanup Docker
+          //     //stop all containers:
+          //     // docker stop $(docker ps -aq)
+          //     // delete containers
+          //     // docker container prune -f
+          //
+          //     //sh 'docker system prune -a -f'
+          //     //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
+          //   }
+          //
+          // }
 
         }
         changed {
