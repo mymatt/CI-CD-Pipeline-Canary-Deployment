@@ -85,7 +85,7 @@ pipeline {
 
                       if (blue == '0'){
                         echo "blue is offline"
-                        DEPLOY_VERS = 'blue'
+                        DEPLOY_VERS = 'blue_4'
                         DEPLOY_PORT = 8060
                         next_state = 'blue'
                       }
@@ -296,7 +296,7 @@ pipeline {
         always {
           node('worker'){
             steps {
-              
+
               echo "Post Always Section: To Launch new Version add weight value greater than 0 for ${next_state} service"
 
               /* clean up our workspace */
