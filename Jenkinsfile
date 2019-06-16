@@ -105,10 +105,6 @@ pipeline {
                       // echo "port: ${DEPLOY_PORT}"
                     }
 
-                    // script {
-                    //   error "exit "
-                    // }
-
                     script {
                       try {
                         customImage = docker.build("${registry}/${image}:${env.BUILD_ID}","--build-arg build_name=${DEPLOY_VERS} --build-arg build_port=${DEPLOY_PORT}  -f ${dockerfile_Build} ." )
@@ -131,9 +127,6 @@ pipeline {
                       script {
                         try {
                           echo 'Unit tests'
-                          // sh 'docker-compose -f test.yml up -d --build --remove-orphans'
-                          // sh 'sleep 5'
-                          // sh 'docker-compose -f test.yml exec -T fpm_test bash build/php_unit.sh'
 
                             customImage.inside {
                                 echo 'running tests'
@@ -228,16 +221,7 @@ pipeline {
           }
           steps {
               echo 'Deploy local'
-              //first: deploy docker compose to simulate existing infrastructure
-              // change nginx conf to allow blue green deployment
-              // docker compose up
-              // publish to a docker swarm set of nodes
-              // make sure that compose pulls the tested and newly uploaded image
 
-              //make sure env variables are correct in docker-compose files
-              // NGINX_SERVER_NAME
-              // NODE_NAME
-              // BIND_IP
               script {
                 if (next_state == 'blue'){
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
@@ -249,10 +233,6 @@ pipeline {
                 }
                 currentBuild.result = 'SUCCESS'
               }
-
-              // script {
-              //   currentBuild.result = 'SUCCESS'
-              // }
 
           }
         }
@@ -272,7 +252,7 @@ pipeline {
             // publish to a docker swarm set of nodes
             // make sure that compose pulls the tested and newly uploaded image
 
-            //using compose in production: https://docs.docker.com/compose/production/
+            //using compose in production
             //rebuilds the image for blue and then stop, destroy, and recreate just the blue service
             //--no-deps flag prevents Compose from also recreating any services which blue depends on
             script {
@@ -287,9 +267,6 @@ pipeline {
               currentBuild.result = 'SUCCESS'
             }
 
-            // script {
-            //   currentBuild.result = 'SUCCESS'
-            // }
           }
         }
       }
