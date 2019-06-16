@@ -68,8 +68,8 @@ pipeline {
                       // check key value
 
                       script {
-                        blue = sh "curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'"
-                        green = sh "curl -XGET 'http://localhost:8500/v1/kv/prod/green_weight?raw=1'"
+                        blue = sh 'curl -XGET http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
+                        green = sh 'curl -XGET http://localhost:8500/v1/kv/prod/green_weight?raw=1'
                       }
 
 
