@@ -74,13 +74,6 @@ pipeline {
                         echo "blue: ${blue}"
                         echo "green: ${green}"
 
-                        // if (blue >= 1 && green >= 1){
-                        //   echo "in here..."
-                        //   slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
-                        //
-                        //   error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
-                        // }
-
                         if (blue == '0'){
                           echo "in blue"
                           DEPLOY_VERS = 'blue'
@@ -89,6 +82,11 @@ pipeline {
                           echo "in green"
                           DEPLOY_VERS = 'green'
                           DEPLOY_PORT = 8070
+                        }else {
+                          echo "in here...green and blue live"
+                          slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
+
+                          error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
                         }
                         echo "vers: ${DEPLOY_VERS}"
                         echo "port: ${DEPLOY_PORT}"
