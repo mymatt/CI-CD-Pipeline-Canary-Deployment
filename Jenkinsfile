@@ -74,7 +74,7 @@ pipeline {
                         echo "blue: ${blue}"
                         echo "green: ${green}"
 
-                        if (blue != 0 && green != 0){
+                        if (blue >= 1 && green >= 1){
                           echo "in here..."
                           slackSend channel: 'app_updates', color: 'warning', message: "Green and Blue services both live for job: ${env.JOB_NAME} #${env.BUILD_NUMBER}. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
 
