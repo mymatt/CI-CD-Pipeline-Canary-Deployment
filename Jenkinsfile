@@ -81,11 +81,11 @@ pipeline {
                         //   error "Green and Blue services both live. To deploy new service, change weight of one service to zero, which will then be replaced with new service."
                         // }
 
-                        if (blue == 0){
+                        if (blue == '0'){
                           echo "in blue"
                           DEPLOY_VERS = 'blue'
                           DEPLOY_PORT = 8060
-                        }else if (green == 0){
+                        }else if (green == '0'){
                           echo "in green"
                           DEPLOY_VERS = 'green'
                           DEPLOY_PORT = 8070
