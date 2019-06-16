@@ -61,6 +61,8 @@ pipeline {
                       sh 'docker exec proxy killall -SIGHUP consul-template'
 
                       // check key value
+                      def blue
+                      def green
                       sh '''
                         blue = curl -XGET 'http://localhost:8500/v1/kv/prod/blue_weight?raw=1'
                         green = curl -XGET 'http://localhost:8500/v1/kv/prod/green_weight?raw=1'
