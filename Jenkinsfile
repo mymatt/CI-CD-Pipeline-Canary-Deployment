@@ -239,11 +239,11 @@ pipeline {
               // NODE_NAME
               // BIND_IP
               script {
-                if (next_state = 'blue'){
+                if (next_state == 'blue'){
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d blue"
                 }
-                else if (next_state = 'green'){
+                else if (next_state == 'green'){
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
                 }
@@ -275,11 +275,11 @@ pipeline {
             //rebuilds the image for blue and then stop, destroy, and recreate just the blue service
             //--no-deps flag prevents Compose from also recreating any services which blue depends on
             script {
-              if (next_state = 'blue'){
+              if (next_state == 'blue'){
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build blue"
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d blue"
               }
-              else if (next_state = 'green'){
+              else if (next_state == 'green'){
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
               }
