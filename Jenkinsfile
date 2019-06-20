@@ -1,5 +1,16 @@
 
-// Blue Green Deployment Pipeline
+// Canary Blue Green Deployment Pipeline
+// Weighted deployment of 2 services labelled: Blue, Gree
+
+// nginx conf to allow weighted deployment
+// consul, and consul template to provide service dicovery and KV store
+
+// docker-compose utilized to manage containers
+
+// local testing and production environments based on nodes with correct labels, setup in jenkins
+
+// slack notifications
+
 
 def blue = '0'
 def green = '0'
@@ -46,8 +57,8 @@ pipeline {
                     actual: LOCAL_TEST
                   }
                   steps {
-                    //start all services
-                    // for local testing only
+                      // for local testing only
+                      // start all services
                       echo "Launch Services"
                       sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up -d"
 
@@ -122,7 +133,6 @@ pipeline {
 
               stage('Unit Test') {
                   steps {
-                      // Unit Testing here
                       script {
                         try {
                           echo 'Unit tests'
@@ -142,7 +152,6 @@ pipeline {
                           currentBuild.result = 'FAILURE'
                           error "Unit Test failed"
                         }finally{
-                          //????
                         }
                       }
                   }
@@ -161,7 +170,6 @@ pipeline {
                       currentBuild.result = 'FAILURE'
                       error "Integration Test failed"
                     }finally{
-                      //?????
                     }
                   }
                 }
@@ -209,6 +217,7 @@ pipeline {
 
         stage('Deploy Local'){
           //change to { label local }
+          // 'local' node setup required
           agent { label 'worker' }
           when {
             equals expected: 'local',
@@ -218,16 +227,20 @@ pipeline {
           steps {
               echo 'Deploy local'
 
+              //rebuilds the image for offline service (blue or green) and then stop, destroy, and recreate just the offline service
+              //--no-deps flag prevents Compose from also recreating any services which offline service depends on
+
               script {
                 if (next_state == 'blue'){
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d blue"
+                  currentBuild.result = 'SUCCESS'
                 }
                 else if (next_state == 'green'){
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
+                  currentBuild.result = 'SUCCESS'
                 }
-                currentBuild.result = 'SUCCESS'
               }
 
           }
@@ -235,6 +248,7 @@ pipeline {
 
         stage('Deploy Production'){
           //change to { label production }
+          // production labelled node setup in jenkins config
           agent { label 'worker' }
           when {
             equals expected: 'production',
@@ -243,24 +257,18 @@ pipeline {
           }
           steps {
             echo 'Deploy production entered'
-            // nginx conf to allow blue green deployment
-            // docker compose up
-            // publish to a docker swarm set of nodes
-            // make sure that compose pulls the tested and newly uploaded image
 
-            //using compose in production
-            //rebuilds the image for blue and then stop, destroy, and recreate just the blue service
-            //--no-deps flag prevents Compose from also recreating any services which blue depends on
             script {
               if (next_state == 'blue'){
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build blue"
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d blue"
+                currentBuild.result = 'SUCCESS'
               }
               else if (next_state == 'green'){
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
+                currentBuild.result = 'SUCCESS'
               }
-              currentBuild.result = 'SUCCESS'
             }
 
           }
