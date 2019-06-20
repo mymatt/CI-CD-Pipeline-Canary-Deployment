@@ -1,6 +1,8 @@
 
 FROM nginx:latest
 
+# apache2-utils -> htpasswd
+# procps -> killall
 RUN \
   apt-get update \
   && apt-get -y install apache2-utils curl unzip procps runit \
