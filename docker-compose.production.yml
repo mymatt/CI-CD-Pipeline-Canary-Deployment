@@ -15,11 +15,11 @@ services:
       - BIND_IP=192.168.60.10
 
   blue:
-    image: mattmyers3491/jenkins-test:latest
+    image: ${current_image}
     ports:
       - '8060:8060'
 
   green:
-    image: mattmyers3491/jenkins-test:latest
+    image: ${current_image}
     ports:
       - '8070:8070'

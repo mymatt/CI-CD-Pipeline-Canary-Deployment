@@ -1,20 +1,17 @@
 
-// Canary Blue Green Deployment Pipeline
+// Canary Deployment Pipeline
 // Weighted deployment of 2 services labelled: Blue, Gree
-
-// nginx conf to allow weighted deployment
+// nginx conf to issue weighted deployment
 // consul, and consul template to provide service dicovery and KV store
-
 // docker-compose utilized to manage containers
-
 // local testing and production environments based on nodes with correct labels, setup in jenkins
-
 // slack notifications
-
 
 def blue = '0'
 def green = '0'
 def next_state = 'nil'
+
+def SLACK_COLOR = ['SUCCESS': 'good', 'FAILURE': 'danger', 'UNSTABLE': 'warning', 'ABORTED': 'danger']
 
 pipeline {
 
@@ -232,12 +229,12 @@ pipeline {
 
               script {
                 if (next_state == 'blue'){
-                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
+                  //sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build blue"
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d blue"
                   currentBuild.result = 'SUCCESS'
                 }
                 else if (next_state == 'green'){
-                  sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
+                  //sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} build green"
                   sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_override} up --no-deps -d green"
                   currentBuild.result = 'SUCCESS'
                 }
@@ -260,12 +257,10 @@ pipeline {
 
             script {
               if (next_state == 'blue'){
-                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build blue"
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d blue"
                 currentBuild.result = 'SUCCESS'
               }
               else if (next_state == 'green'){
-                sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} build green"
                 sh "docker-compose -f ${docker_compose_main} -f ${docker_compose_prod} up --no-deps -d green"
                 currentBuild.result = 'SUCCESS'
               }
@@ -278,32 +273,29 @@ pipeline {
       post {
         always {
           echo "Post Always Section: To Launch new Version add weight value greater than 0 for ${next_state} service"
-          // node('worker'){
-          //   step {
-          //     /* clean up our workspace */
-          //     //deleteDir()
-          //
-          //     //Cleanup Docker
-          //     //stop all containers:
-          //     // docker stop $(docker ps -aq)
-          //     // delete containers
-          //     // docker container prune -f
-          //
-          //     //sh 'docker system prune -a -f'
-          //     //sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
-          //   }
-          //
-          // }
+          node('worker'){
+            step {
+              /* clean up our workspace */
+              deleteDir()
+
+              // Cleanup Docker
+              // stop all containers:
+              sh 'docker stop $(docker ps -aq)'
+
+              sh 'docker system prune -a -f'
+              sh 'docker rmi $(docker images --filter=reference="${registry}/${image}:*" -q) -f || true'
+            }
+          }
 
         }
         changed {
           echo 'Things were different before...'
         }
         failure {
-          slackSend channel: 'app_updates', color: 'good', message: "Attention: ${env.JOB_NAME} #${env.BUILD_NUMBER} has failed."
+          slackSend channel: 'app_updates', color: SLACK_COLOR[currentBuild.currentResult], message: "Attention: ${env.JOB_NAME} #${env.BUILD_NUMBER} has failed."
         }
         success {
-          slackSend channel: 'app_updates', color: 'good', message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+          slackSend channel: 'app_updates', color: SLACK_COLOR[currentBuild.currentResult], message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
         }
         unstable {
           echo 'I am unstable :/'
